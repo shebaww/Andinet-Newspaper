@@ -59,8 +59,9 @@ function App() {
   return (
     <Router>
       <AuthProvider>
+        <a href="#main-content" className="skip-link">Skip to Content</a>
         <Navbar />
-        <main style={{ minHeight: 'calc(100vh - 200px)' }}>
+        <main id="main-content" style={{ minHeight: 'calc(100vh - 200px)' }}>
           <AppRoutes />
         </main>
         <Footer />

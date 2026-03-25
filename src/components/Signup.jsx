@@ -33,67 +33,92 @@ const Signup = () => {
   };
 
   return (
-    <div className="container">
-      <div className="form-container">
-        <h1 className="masthead" style={{ fontSize: '2rem', margin: '0 0 20px 0' }}>
-          SUBSCRIBE
-        </h1>
-        
-        {error && <div className="alert alert-error" style={{ color: '#d32f2f', marginBottom: '20px', fontSize: '12px' }}>{error}</div>}
-        
+    <div className="container" style={{ maxWidth: '700px', marginTop: '100px', marginBottom: '100px' }}>
+      <div style={{ padding: '60px', border: '1px solid var(--text-ink)', backgroundColor: 'white', boxShadow: '15px 15px 0px var(--silver-accent)' }}>
+        <header style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <h1 className="h-large" style={{ margin: 0, letterSpacing: '1px' }}>JOIN THE GAZETTE</h1>
+          <p style={{ fontFamily: 'var(--font-main)', color: '#666', fontSize: '14px', marginTop: '10px' }}>
+            Support independent journalism and join our community of readers.
+          </p>
+        </header>
+
+        {error && (
+          <div style={{ 
+            backgroundColor: '#fff5f5', 
+            color: '#d32f2f', 
+            padding: '12px', 
+            fontSize: '11px', 
+            fontWeight: 700, 
+            fontFamily: 'var(--font-sans)', 
+            marginBottom: '30px', 
+            border: '1px solid #feb2b2',
+            textAlign: 'center',
+            textTransform: 'uppercase'
+          }}>
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>FULL NAME</label>
+          <div className="editor-field">
+            <label className="editor-label">Full Name</label>
             <input
+              className="editor-input"
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               required
+              placeholder="e.g. John Doe"
             />
           </div>
           
-          <div className="form-group">
-            <label>EMAIL ADDRESS</label>
+          <div className="editor-field">
+            <label className="editor-label">Email Address</label>
             <input
+              className="editor-input"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              placeholder="name@provider.com"
             />
           </div>
           
-          <div className="form-group">
-            <label>PASSWORD</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+          <div className="grid-system" style={{ marginBottom: '40px' }}>
+            <div style={{ gridColumn: 'span 6' }}>
+              <label className="editor-label">Password</label>
+              <input
+                className="editor-input"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+              />
+            </div>
+            <div style={{ gridColumn: 'span 6' }}>
+              <label className="editor-label">Confirm Password</label>
+              <input
+                className="editor-input"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+              />
+            </div>
           </div>
           
-          <div className="form-group">
-            <label>CONFIRM PASSWORD</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
-          </div>
-          
-          <button type="submit" disabled={loading} style={{ width: '100%' }}>
+          <button type="submit" disabled={loading} className="btn-heritage" style={{ width: '100%', marginBottom: '20px' }}>
             {loading ? 'CREATING ACCOUNT...' : 'JOIN NOW'}
           </button>
         </form>
         
-        <hr />
-        
-        <div style={{ textAlign: 'center', marginTop: '20px' }}>
-          <Link to="/login" className="nav-link" style={{ fontSize: '11px' }}>
-            ALREADY A MEMBER? SIGN IN
-          </Link>
-        </div>
+        <footer style={{ textAlign: 'center', paddingTop: '30px', borderTop: '1px solid var(--silver-accent)', marginTop: '30px' }}>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: '11px', color: '#666', fontWeight: 600 }}>
+            ALREADY A MEMBER? <Link to="/login" style={{ color: 'var(--text-ink)', textDecoration: 'underline' }}>SIGN IN TO YOUR ACCOUNT</Link>
+          </p>
+        </footer>
       </div>
     </div>
   );

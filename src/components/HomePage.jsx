@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { db } from "../firebase/config";
 import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
 import { Link } from "react-router-dom";
+import Skeleton from "./common/Skeleton";
 
 const HomePage = () => {
   const [posts, setPosts] = useState([]);
@@ -169,21 +170,35 @@ const HomePage = () => {
 
   if (loading)
     return (
-      <div
-        className="container"
-        style={{
-          textAlign: "center",
-          padding: "150px",
-          fontFamily: "Playfair Display",
-        }}
-      >
-        SYNCHRONIZING WITH PRESS...
+      <div className="container" style={{ marginTop: '50px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '80px' }}>
+          <Skeleton width="60%" height="80px" margin="0 auto" />
+          <Skeleton width="100%" height="40px" margin="20px auto" />
+        </div>
+        <div className="grid-system tier-1">
+          <div className="column-border" style={{ gridColumn: 'span 8' }}>
+            <Skeleton width="30%" height="15px" />
+            <Skeleton width="90%" height="120px" margin="20px 0" />
+            <Skeleton height="400px" margin="30px 0" />
+            <Skeleton count={3} />
+          </div>
+          <div style={{ gridColumn: 'span 4' }}>
+            {[1, 2, 3].map(i => (
+              <div key={i} style={{ marginBottom: '40px', paddingBottom: '30px', borderBottom: 'var(--hairline)' }}>
+                <Skeleton width="40%" height="15px" />
+                <Skeleton height="60px" margin="15px 0" />
+                <Skeleton height="80px" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
 
   const leadStory = filteredPosts[0];
-  const secondColumn = filteredPosts.slice(1, 4);
-  const thirdColumn = filteredPosts.slice(4, 10);
+  const secondaryStories = filteredPosts.slice(1, 4);
+  const featureStories = filteredPosts.slice(4, 7);
+  const latestUpdates = filteredPosts.slice(7, 13);
 
   const changePercentNum = parseFloat(finance.changePercent);
   const financeColor = !isNaN(changePercentNum) && changePercentNum > 0 
@@ -200,7 +215,7 @@ const HomePage = () => {
     <div className="container">
       <header className="site-header">
         <Link to="/" className="masthead-title">
-          The Andinet Gazette
+          The Andinet
         </Link>
         <div className="masthead-nav-bar">
           <div style={{ textAlign: "left" }}>
@@ -223,99 +238,105 @@ const HomePage = () => {
       </header>
 
       <section className="master-search">
-        <input
-          type="text"
-          placeholder="Explore the Archives"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Search the archives..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
       </section>
 
-      <main className="front-page-grid">
-        {/* Lead Column */}
-        <section className="column">
-          {leadStory && (
-            <article>
-              <span className="kicker">{leadStory.category || "News"}</span>
-              <Link to={`/post/${leadStory.id}`} className="headline h-giant">
-                {leadStory.title}
-              </Link>
-              <div className="media-frame">
-                {leadStory.imageUrl && (
-                  <img src={leadStory.imageUrl} alt="Lead" />
-                )}
-              </div>
-              <p className="excerpt" style={{ fontSize: "1.1rem" }}>
-                {leadStory.excerpt}
-              </p>
-              <div className="byline">By {leadStory.authorName}</div>
-            </article>
-          )}
-        </section>
-
-        {/* Second Column */}
-        <section className="column">
-          {secondColumn.map((post, idx) => (
-            <article
-              key={post.id}
-              style={{
-                marginBottom: "40px",
-                paddingBottom: "30px",
-                borderBottom:
-                  idx !== secondColumn.length - 1 ? "var(--hairline)" : "none",
-              }}
-            >
-              <span className="kicker">{post.category || "News"}</span>
-              <Link to={`/post/${post.id}`} className="headline h-large">
-                {post.title}
-              </Link>
-              <p className="excerpt" style={{ fontSize: "0.9rem" }}>
-                {post.excerpt?.substring(0, 150)}...
-              </p>
-              <div className="byline">By {post.authorName}</div>
-            </article>
-          ))}
-        </section>
-
-        {/* Third Column */}
-        <section className="column">
-          <h4
-            className="kicker"
-            style={{
-              display: "block",
-              textAlign: "center",
-              marginBottom: "25px",
-              borderBottom: "1px solid black",
-            }}
-          >
-            Latest Updates
-          </h4>
-          {thirdColumn.map((post) => (
-            <article
-              key={post.id}
-              style={{
-                marginBottom: "20px",
-                paddingBottom: "20px",
-                borderBottom: "var(--hairline)",
-              }}
-            >
-              <Link to={`/post/${post.id}`} className="headline h-small">
-                {post.title}
-              </Link>
-              <div
-                className="byline"
-                style={{ fontSize: "9px", marginTop: "5px" }}
+      <main style={{ marginTop: '50px' }}>
+        {/* Tier 1: Lead Story & Secondary */}
+        <div className="grid-system tier-1">
+          <div className="column-border" style={{ gridColumn: 'span 8' }}>
+            {leadStory && (
+              <article>
+                <span className="kicker">{leadStory.category || "News"}</span>
+                <Link to={`/post/${leadStory.id}`} className="headline h-giant">
+                  {leadStory.title}
+                </Link>
+                <div className="media-frame">
+                  {leadStory.imageUrl && (
+                    <img src={leadStory.imageUrl} alt="Lead" />
+                  )}
+                </div>
+                <p className="excerpt" style={{ fontSize: "1.1rem" }}>
+                  {leadStory.excerpt}
+                </p>
+                <div className="byline">By {leadStory.authorName}</div>
+              </article>
+            )}
+          </div>
+          <div style={{ gridColumn: 'span 4' }}>
+            {secondaryStories.map((post, idx) => (
+              <article
+                key={post.id}
+                style={{
+                  marginBottom: "30px",
+                  paddingBottom: "20px",
+                  borderBottom: idx !== secondaryStories.length - 1 ? "var(--hairline)" : "none",
+                }}
               >
-                {post.authorName} • {post.category || "News"}
-              </div>
-            </article>
+                <span className="kicker">{post.category || "News"}</span>
+                <Link to={`/post/${post.id}`} className="headline h-large">
+                  {post.title}
+                </Link>
+                <p className="excerpt" style={{ fontSize: "0.9rem" }}>
+                  {post.excerpt?.substring(0, 120)}...
+                </p>
+                <div className="byline">By {post.authorName}</div>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        {/* Tier 2: Features */}
+        <div className="grid-system tier-2">
+          {featureStories.map((post) => (
+            <div key={post.id} className="column-border" style={{ gridColumn: 'span 4' }}>
+              <article>
+                <span className="kicker">{post.category || "Feature"}</span>
+                <Link to={`/post/${post.id}`} className="headline h-medium">
+                  {post.title}
+                </Link>
+                <div className="media-frame" style={{ border: 'none', padding: 0 }}>
+                  {post.imageUrl && (
+                    <img src={post.imageUrl} alt="Feature" style={{ height: '200px', objectFit: 'cover' }} />
+                  )}
+                </div>
+                <p className="excerpt" style={{ fontSize: "0.85rem" }}>
+                  {post.excerpt?.substring(0, 100)}...
+                </p>
+                <div className="byline">By {post.authorName}</div>
+              </article>
+            </div>
           ))}
-          {filteredPosts.length === 0 && (
-            <p style={{ textAlign: "center", marginTop: "50px" }}>
-              No records found.
-            </p>
-          )}
-        </section>
+        </div>
+
+        {/* Tier 3: Latest Updates */}
+        <div className="grid-system tier-3">
+          {latestUpdates.map((post) => (
+            <div key={post.id} style={{ gridColumn: 'span 2' }}>
+              <article style={{ borderTop: '1px solid black', paddingTop: '10px' }}>
+                <Link to={`/post/${post.id}`} className="headline h-small">
+                  {post.title}
+                </Link>
+                <div className="byline" style={{ fontSize: '9px', marginTop: '5px' }}>
+                  {post.authorName} • {post.category || "News"}
+                </div>
+              </article>
+            </div>
+          ))}
+        </div>
+
+        {filteredPosts.length === 0 && (
+          <p style={{ textAlign: "center", marginTop: "50px", fontFamily: 'var(--font-sans)', fontStyle: 'italic' }}>
+            No records found in the archives.
+          </p>
+        )}
       </main>
     </div>
   );

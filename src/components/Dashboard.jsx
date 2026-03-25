@@ -2,15 +2,21 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase/config';
 import { collection, query, where, getDocs, deleteDoc, doc, orderBy, updateDoc } from 'firebase/firestore';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import UserManager from './UserManager';
 import DonationManager from './DonationManager';
+import Dialog from './common/Dialog';
+import Toast from './common/Toast';
 
 const Dashboard = () => {
   const { user, userRole, userProfile } = useAuth();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalPosts: 0, totalViews: 0 });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState(null);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -20,13 +26,10 @@ const Dashboard = () => {
       try {
         let q;
         if (userRole === 'admin') {
-          // Admin sees everything
           q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
         } else if (userRole === 'editor') {
-          // Editor sees their own posts
           q = query(collection(db, 'posts'), where('authorId', '==', user.uid), orderBy('createdAt', 'desc'));
         } else {
-          // Readers don't have posts to manage
           setPosts([]);
           setLoading(false);
           return;
@@ -39,7 +42,6 @@ const Dashboard = () => {
         }));
         setPosts(postsData);
 
-        // Calculate stats
         const totalViews = postsData.reduce((acc, curr) => acc + (curr.views || 0), 0);
         setStats({ totalPosts: postsData.length, totalViews });
 
@@ -53,140 +55,185 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [user, userRole]);
 
-  const makeMeAdmin = async () => {
+  const confirmDelete = (id) => {
+    setPostToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeletePost = async () => {
+    if (!postToDelete) return;
+    setDeleteDialogOpen(false);
     try {
-      const userDoc = doc(db, 'users', user.uid);
-      await updateDoc(userDoc, {
-        role: 'admin'
-      });
-      alert('You are now an admin! Please refresh the page.');
-      window.location.reload(); // Auto refresh
+      await deleteDoc(doc(db, 'posts', postToDelete));
+      setPosts(posts.filter(post => post.id !== postToDelete));
+      setToast({ message: 'Article removed from archives', type: 'success' });
     } catch (error) {
-      console.error('Error making admin:', error);
-      alert('Failed to make admin. Check console for error.');
+      console.error('Error deleting post:', error);
+      setToast({ message: 'Failed to remove article', type: 'error' });
+    } finally {
+      setPostToDelete(null);
     }
   };
 
-  const handleDeletePost = async (id) => {
-    if (window.confirm('ARE YOU SURE YOU WANT TO REMOVE THIS ARTICLE FROM THE PRESS?')) {
-      try {
-        await deleteDoc(doc(db, 'posts', id));
-        setPosts(posts.filter(post => post.id !== id));
-      } catch (error) {
-        console.error('Error deleting post:', error);
-      }
-    }
-  };
+  if (loading) return (
+    <div style={{ textAlign: 'center', padding: '150px', fontFamily: 'var(--font-header)' }}>
+      ACCESSING EDITORIAL RECORDS...
+    </div>
+  );
 
-  if (loading) return <div className="container">Accessing records...</div>;
+  const now = new Date();
+  const publishedPosts = posts.filter(p => !p.publishedAt || new Date(p.publishedAt.toDate ? p.publishedAt.toDate() : p.publishedAt) <= now);
+  const scheduledPosts = posts.filter(p => p.publishedAt && new Date(p.publishedAt.toDate ? p.publishedAt.toDate() : p.publishedAt) > now);
 
   return (
-    <div className="container">
-      {/* TEMPORARY ADMIN BUTTON - Remove this after you're admin */}
-      {userRole === 'reader' && (
-        <div style={{ 
-          background: '#fff3cd', 
-          border: '1px solid #ffc107', 
-          padding: '15px', 
-          marginBottom: '20px',
-          borderRadius: '4px',
-          textAlign: 'center'
-        }}>
-          <p style={{ marginBottom: '10px' }}>⚠️ TEMPORARY: You are currently a READER</p>
-          <button 
-            onClick={makeMeAdmin}
-            style={{
-              background: '#d32f2f',
-              color: 'white',
-              border: 'none',
-              padding: '10px 20px',
-              cursor: 'pointer',
-              fontWeight: 'bold'
-            }}
-          >
-            MAKE ME ADMIN (Temporary - Remove Later)
-          </button>
+    <div className="container" style={{ paddingBottom: '100px' }}>
+      <header style={{ padding: '60px 0', borderBottom: 'var(--border-double)', marginBottom: '50px', textAlign: 'center' }}>
+        <h1 className="h-giant" style={{ margin: 0 }}>
+          {userRole === 'admin' ? 'EDITORIAL HEADQUARTERS' : 'REPORTER DASHBOARD'}
+        </h1>
+        <div style={{ fontFamily: 'var(--font-sans)', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', marginTop: '10px' }}>
+          {userProfile?.displayName || user?.email} • {userRole?.toUpperCase()} ACCESS
         </div>
-      )}
+      </header>
       
-      <div className="masthead" style={{ fontSize: '2rem', marginBottom: '30px' }}>
-        {userRole === 'admin' ? 'EDITORIAL HEADQUARTERS' : userRole === 'editor' ? 'REPORTER DASHBOARD' : 'READER DASHBOARD'}
-      </div>
-      
-      <div className="dashboard-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
-        <div className="form-container" style={{ textAlign: 'center' }}>
-          <div className="section-header">ARTICLES PUBLISHED</div>
-          <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>{stats.totalPosts}</div>
+      <div className="grid-system" style={{ marginBottom: '60px' }}>
+        <div style={{ gridColumn: 'span 4' }}>
+          <div style={{ border: '1px solid var(--text-ink)', padding: '30px', textAlign: 'center', backgroundColor: 'white', boxShadow: '10px 10px 0px var(--silver-accent)' }}>
+            <div className="editor-label">Articles Published</div>
+            <div style={{ fontSize: '3rem', fontWeight: 900, fontFamily: 'var(--font-header)' }}>{stats.totalPosts}</div>
+          </div>
         </div>
-        <div className="form-container" style={{ textAlign: 'center' }}>
-          <div className="section-header">TOTAL READERSHIP</div>
-          <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>{stats.totalViews}</div>
+        <div style={{ gridColumn: 'span 4' }}>
+          <div style={{ border: '1px solid var(--text-ink)', padding: '30px', textAlign: 'center', backgroundColor: 'white', boxShadow: '10px 10px 0px var(--silver-accent)' }}>
+            <div className="editor-label">Total Readership</div>
+            <div style={{ fontSize: '3rem', fontWeight: 900, fontFamily: 'var(--font-header)' }}>{stats.totalViews}</div>
+          </div>
+        </div>
+        <div style={{ gridColumn: 'span 4' }}>
+          <div style={{ border: '1px solid var(--text-ink)', padding: '30px', textAlign: 'center', backgroundColor: 'white', boxShadow: '10px 10px 0px var(--silver-accent)' }}>
+            <div className="editor-label">Upcoming Releases</div>
+            <div style={{ fontSize: '3rem', fontWeight: 900, fontFamily: 'var(--font-header)' }}>{scheduledPosts.length}</div>
+          </div>
         </div>
       </div>
 
-      {(userRole === 'admin' || userRole === 'editor') && (
-        <div className="articles-management">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 className="section-header" style={{ fontSize: '1.5rem', margin: 0 }}>
-              {userRole === 'admin' ? 'ALL PRESS RELEASES' : 'MY ARTICLES'}
-            </h2>
-            <Link to="/create-post" className="nav-link" style={{ fontWeight: 'bold' }}>+ NEW ARTICLE</Link>
-          </div>
-          
-          {posts.length === 0 ? (
-            <div className="form-container" style={{ textAlign: 'center' }}>
-              <p>NO ARTICLES ON FILE. CLICK "+ NEW ARTICLE" TO CREATE YOUR FIRST POST.</p>
-            </div>
-          ) : (
-            <div className="table-container" style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #1a1a1a' }}>
-                    <th style={{ padding: '10px' }}>DATE</th>
-                    <th style={{ padding: '10px' }}>TITLE</th>
-                    {userRole === 'admin' && <th style={{ padding: '10px' }}>REPORTER</th>}
-                    <th style={{ padding: '10px' }}>VIEWS</th>
-                    <th style={{ padding: '10px' }}>ACTIONS</th>
-                   </tr>
-                </thead>
-                <tbody>
-                  {posts.map(post => (
-                    <tr key={post.id} style={{ borderBottom: '1px solid #e0e0e0' }}>
-                      <td style={{ padding: '10px' }}>{post.createdAt?.toDate().toLocaleDateString()}</td>
-                      <td style={{ padding: '10px' }}>{post.title}</td>
-                      {userRole === 'admin' && <td style={{ padding: '10px' }}>{post.authorName}</td>}
-                      <td style={{ padding: '10px' }}>{post.views || 0}</td>
-                      <td style={{ padding: '10px' }}>
-                        <Link to={`/post/${post.id}`} style={{ marginRight: '10px', textDecoration: 'none', color: '#1a1a1a' }}>VIEW</Link>
-                        <Link to={`/edit-post/${post.id}`} style={{ marginRight: '10px', textDecoration: 'none', color: '#1a1a1a' }}>EDIT</Link>
-                        <button 
-                          onClick={() => handleDeletePost(post.id)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d32f2f', padding: 0, font: 'inherit' }}
-                        >
-                          REMOVE
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+      <section style={{ marginBottom: '80px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '30px', borderBottom: '1px solid black', paddingBottom: '10px' }}>
+          <h2 className="h-large" style={{ margin: 0 }}>ARCHIVE MANAGEMENT</h2>
+          {(userRole === 'admin' || userRole === 'editor') && (
+            <Link to="/create-post" className="btn-heritage" style={{ textDecoration: 'none' }}>+ Draft New Article</Link>
           )}
         </div>
-      )}
+
+        {scheduledPosts.length > 0 && (
+          <div style={{ marginBottom: '50px' }}>
+            <h3 className="editor-label" style={{ color: 'var(--green-accent)', marginBottom: '20px' }}>Scheduled for Release</h3>
+            <table className="nyt-table">
+              <tbody>
+                {scheduledPosts.map(post => (
+                  <tr key={post.id} style={{ backgroundColor: '#fdfdfd' }}>
+                    <td style={{ color: '#666', fontSize: '11px' }}>
+                      {new Date(post.publishedAt.toDate ? post.publishedAt.toDate() : post.publishedAt).toLocaleString()}
+                    </td>
+                    <td style={{ fontWeight: 700 }}>{post.title}</td>
+                    <td style={{ fontStyle: 'italic', fontSize: '11px' }}>Scheduled</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '15px' }}>
+                        <Link to={`/edit-post/${post.id}`} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-ink)' }}>EDIT</Link>
+                        <button onClick={() => confirmDelete(post.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d32f2f', fontSize: '11px', fontWeight: 700 }}>REMOVE</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        
+        {posts.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '100px', border: '1px solid var(--silver-accent)', backgroundColor: '#f9f9f9' }}>
+            <p style={{ fontFamily: 'var(--font-main)', fontStyle: 'italic', color: '#666', marginBottom: '30px' }}>
+              No articles are currently on file in the press archives.
+            </p>
+            {(userRole === 'admin' || userRole === 'editor') && (
+              <Link to="/create-post" className="btn-heritage" style={{ textDecoration: 'none' }}>Draft Your First Story</Link>
+            )}
+          </div>
+        ) : (
+          <table className="nyt-table">
+            <thead>
+              <tr>
+                <th>DATE</th>
+                <th>HEADLINE</th>
+                {userRole === 'admin' && <th>REPORTER</th>}
+                <th>VIEWS</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {publishedPosts.map(post => (
+                <tr key={post.id}>
+                  <td style={{ fontSize: '12px' }}>
+                    {post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : 'N/A'}
+                  </td>
+                  <td style={{ fontWeight: 700, maxWidth: '400px' }}>{post.title}</td>
+                  {userRole === 'admin' && <td style={{ fontSize: '12px', textTransform: 'uppercase' }}>{post.authorName}</td>}
+                  <td>{post.views || 0}</td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '15px' }}>
+                      <Link to={`/post/${post.id}`} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-ink)' }}>VIEW</Link>
+                      <Link to={`/edit-post/${post.id}`} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-ink)' }}>EDIT</Link>
+                      <button 
+                        onClick={() => confirmDelete(post.id)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d32f2f', fontSize: '11px', fontWeight: 700 }}
+                      >
+                        REMOVE
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
 
       {userRole === 'admin' && (
-        <>
+        <div style={{ marginTop: '100px' }}>
           <UserManager />
-          <DonationManager />
-        </>
+          <div style={{ marginTop: '100px' }}>
+            <DonationManager />
+          </div>
+        </div>
       )}
 
       {userRole === 'reader' && (
-        <div className="form-container" style={{ textAlign: 'center' }}>
-          <p>WELCOME, CITIZEN. THANK YOU FOR SUPPORTING THE ANDINET GAZETTE.</p>
-          <p style={{ fontSize: '12px', marginTop: '10px' }}>Your membership allows you to comment on articles and receive our weekly newsletter.</p>
+        <div style={{ textAlign: 'center', padding: '100px', border: 'var(--border-double)', backgroundColor: 'white' }}>
+          <h2 className="h-large">WELCOME, SUBSCRIBER.</h2>
+          <p style={{ fontFamily: 'var(--font-main)', marginTop: '20px', color: '#333' }}>
+            Thank you for supporting independent journalism at The Andinet Gazette.
+          </p>
+          <div style={{ marginTop: '40px' }}>
+            <Link to="/profile" className="btn-heritage" style={{ textDecoration: 'none' }}>Manage Your Account</Link>
+          </div>
         </div>
+      )}
+
+      <Dialog 
+        isOpen={deleteDialogOpen}
+        title="Strike Article from Record"
+        message="Are you certain you wish to permanently remove this article from the Gazette archives? This action is final and cannot be reversed by the editorial board."
+        onConfirm={handleDeletePost}
+        onCancel={() => setDeleteDialogOpen(false)}
+        confirmText="Remove Article"
+      />
+
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onDismiss={() => setToast(null)} 
+        />
       )}
     </div>
   );
