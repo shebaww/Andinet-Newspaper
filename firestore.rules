@@ -1,0 +1,107 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions for reusable conditions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isEditor() {
+      return isAuthenticated() && 
+             (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'editor' ||
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read: if true;  // Anyone can read user profiles
+      allow create: if isOwner(userId);  // Users can only create their own profile
+      allow update: if isOwner(userId) || isAdmin();  // Users can update their own, admins can update any
+      allow delete: if false;  // Prevent accidental user deletion
+    }
+    
+    // Posts collection
+    match /posts/{postId} {
+      allow read: if true;  // Anyone can read published posts
+      allow create: if isEditor() && 
+        request.resource.data.authorId == request.auth.uid &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.updatedAt == request.time;
+      
+      allow update: if isEditor() && 
+        (resource.data.authorId == request.auth.uid || isAdmin()) &&
+        request.resource.data.updatedAt == request.time;
+      
+      allow delete: if isEditor() && 
+        (resource.data.authorId == request.auth.uid || isAdmin());
+      
+      // Validate post structure
+      allow create, update: if request.resource.data.keys().hasAll([
+        'title', 'content', 'authorId', 'createdAt', 'updatedAt', 'status'
+      ]) &&
+        request.resource.data.title is string &&
+        request.resource.data.title.size() >= 3 &&
+        request.resource.data.title.size() <= 200 &&
+        request.resource.data.content is string &&
+        request.resource.data.content.size() >= 10 &&
+        request.resource.data.status in ['draft', 'published', 'archived'];
+    }
+    
+    // Comments collection
+    match /comments/{commentId} {
+      allow read: if true;  // Anyone can read comments
+      allow create: if isAuthenticated() && 
+        request.resource.data.authorId == request.auth.uid &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.postId != null;
+      
+      allow update: if isAuthenticated() && 
+        resource.data.authorId == request.auth.uid &&
+        request.resource.data.updatedAt == request.time;
+      
+      allow delete: if isAuthenticated() && 
+        (resource.data.authorId == request.auth.uid || isAdmin() || 
+         get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId == request.auth.uid);
+      
+      // Validate comment structure
+      allow create, update: if request.resource.data.keys().hasAll([
+        'content', 'authorId', 'postId', 'createdAt'
+      ]) &&
+        request.resource.data.content is string &&
+        request.resource.data.content.size() >= 1 &&
+        request.resource.data.content.size() <= 1000;
+    }
+    
+    // Categories collection
+    match /categories/{categoryId} {
+      allow read: if true;  // Anyone can read categories
+      allow create: if isAdmin();  // Only admins can create categories
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Media library (for tracking uploaded images)
+    match /media/{mediaId} {
+      allow read: if true;
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.uploadedAt == request.time;
+      
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      allow delete: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isAdmin());
+    }
+  }
+}
