@@ -1,10 +1,9 @@
 // src/firebase/config.js
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, connectAuthEmulator } from "firebase/auth";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
-import { getStorage, connectStorageEmulator } from "firebase/storage";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
-// Use environment variables
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -15,11 +14,6 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Validate in production
-if (import.meta.env.PROD && !import.meta.env.VITE_FIREBASE_API_KEY) {
-  console.error('❌ Firebase API key missing! Check Netlify environment variables.');
-}
-
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
@@ -27,10 +21,18 @@ export const googleProvider = new GoogleAuthProvider();
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// Connect to emulators in development only
-if (import.meta.env.DEV) {
-  connectAuthEmulator(auth, "http://127.0.0.1:9099");
-  connectFirestoreEmulator(db, "127.0.0.1", 8080);
-  connectStorageEmulator(storage, "127.0.0.1", 9199);
-  console.log("🔥 Connected to Firebase Emulators");
-}
+// Emulators are ONLY for local development
+// They are commented out for production safety
+// To use emulators locally, uncomment these lines:
+// if (import.meta.env.DEV && window.location.hostname === 'localhost') {
+//   import('firebase/auth').then(({ connectAuthEmulator }) => {
+//     connectAuthEmulator(auth, "http://127.0.0.1:9099");
+//   });
+//   import('firebase/firestore').then(({ connectFirestoreEmulator }) => {
+//     connectFirestoreEmulator(db, "127.0.0.1", 8080);
+//   });
+//   import('firebase/storage').then(({ connectStorageEmulator }) => {
+//     connectStorageEmulator(storage, "127.0.0.1", 9199);
+//   });
+//   console.log("🔥 Connected to Firebase Emulators");
+// }
