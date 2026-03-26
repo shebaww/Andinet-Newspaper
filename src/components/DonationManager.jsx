@@ -1,6 +1,8 @@
+// DonationManager.jsx
 import { useState, useEffect } from 'react';
 import { db } from '../firebase/config';
 import { collection, query, getDocs, orderBy } from 'firebase/firestore';
+import { useAuth } from '../context/AuthContext';
 
 const DonationManager = () => {
   const [donations, setDonations] = useState([]);
@@ -8,8 +10,16 @@ const DonationManager = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [amountFilter, setAmountFilter] = useState('all');
+  const [error, setError] = useState('');
+  const { userRole } = useAuth();
 
   useEffect(() => {
+    // Only fetch if user is admin
+    if (userRole !== 'admin') {
+      setLoading(false);
+      return;
+    }
+    
     const fetchDonations = async () => {
       try {
         const q = query(collection(db, 'donations'), orderBy('createdAt', 'desc'));
@@ -22,14 +32,20 @@ const DonationManager = () => {
         setFilteredDonations(donationsData);
       } catch (error) {
         console.error('Error fetching donations:', error);
+        if (error.code === 'permission-denied') {
+          setError('You don\'t have permission to view donations. Admin access required.');
+        } else {
+          setError('Failed to load donations. Please try again.');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchDonations();
-  }, []);
+  }, [userRole]);
 
+  // Filter donations
   useEffect(() => {
     const filtered = donations.filter(donation => {
       const matchesSearch = donation.email?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -44,9 +60,30 @@ const DonationManager = () => {
 
   const totalAmount = donations.reduce((sum, d) => sum + (d.amount || 0), 0);
 
+  // Show access denied if not admin
+  if (userRole !== 'admin') {
+    return (
+      <div className="user-manager" style={{ marginTop: '40px' }}>
+        <div style={{ textAlign: 'center', padding: '50px', backgroundColor: '#f9f9f9', border: '1px solid #f0f0f0' }}>
+          <p style={{ fontFamily: 'var(--font-sans)', color: '#666' }}>
+            ⚠️ Treasury access requires administrator privileges.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) return (
     <div style={{ textAlign: 'center', padding: '100px', fontFamily: 'var(--font-header)' }}>
       ACCESSING TREASURY RECORDS...
+    </div>
+  );
+
+  if (error) return (
+    <div className="user-manager" style={{ marginTop: '40px' }}>
+      <div style={{ textAlign: 'center', padding: '50px', backgroundColor: '#fff5f5', border: '1px solid #feb2b2' }}>
+        <p style={{ fontFamily: 'var(--font-sans)', color: '#d32f2f' }}>{error}</p>
+      </div>
     </div>
   );
 
@@ -101,7 +138,7 @@ const DonationManager = () => {
                 <td style={{ fontSize: '12px' }}>
                   {donation.createdAt?.toDate ? donation.createdAt.toDate().toLocaleDateString() : 'N/A'}
                 </td>
-                <td style={{ fontFamily: 'var(--font-sans)', color: '#666' }}>{donation.email || 'Anonymous'} </td>
+                <td style={{ fontFamily: 'var(--font-sans)', color: '#666' }}>{donation.email || 'Anonymous'}</td>
                 <td style={{ fontWeight: 700, fontFamily: 'var(--font-sans)' }}>
                   ${donation.amount?.toFixed(2) || '0.00'}
                 </td>

@@ -1,15 +1,18 @@
+// src/components/Navbar.jsx - Updated with mobile menu
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ReadingProgress from './ReadingProgress';
 import Dialog from './common/Dialog';
+import MobileMenu from './MobileMenu';
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, userRole, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSlim, setIsSlim] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -65,7 +68,8 @@ const Navbar = () => {
            The Andinet
           </Link>
           
-          <ul className="nav-links" style={{
+          {/* Desktop Navigation */}
+          <ul className="nav-links desktop-nav" style={{
             display: 'flex',
             alignItems: 'center',
             gap: '24px',
@@ -73,6 +77,7 @@ const Navbar = () => {
             padding: 0,
             listStyle: 'none'
           }}>
+            {/* Always visible for everyone */}
             <li>
               <Link to="/" className="nav-link" style={{
                 fontFamily: 'var(--font-sans)',
@@ -115,19 +120,24 @@ const Navbar = () => {
             
             {user ? (
               <>
-                <li>
-                  <Link to="/dashboard" className="nav-link" style={{
-                    fontFamily: 'var(--font-sans)',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    textDecoration: 'none',
-                    color: '#1a1a1a'
-                  }}>
-                    Dashboard
-                  </Link>
-                </li>
+                {/* Dashboard - Only for admin and editor */}
+                {(userRole === 'admin' || userRole === 'editor') && (
+                  <li>
+                    <Link to="/dashboard" className="nav-link" style={{
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      textDecoration: 'none',
+                      color: '#1a1a1a'
+                    }}>
+                      Dashboard
+                    </Link>
+                  </li>
+                )}
+                
+                {/* Profile - Visible to all logged-in users */}
                 <li>
                   <Link to="/profile" className="nav-link" style={{
                     fontFamily: 'var(--font-sans)',
@@ -141,6 +151,24 @@ const Navbar = () => {
                     Profile
                   </Link>
                 </li>
+                
+                {/* Create Post - Only for admin and editor */}
+                {(userRole === 'admin' || userRole === 'editor') && (
+                  <li>
+                    <Link to="/create-post" className="nav-link" style={{
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      textDecoration: 'none',
+                      color: '#2e7d32'
+                    }}>
+                      Write
+                    </Link>
+                  </li>
+                )}
+                
                 <li>
                   <button 
                     onClick={() => setLogoutDialogOpen(true)} 
@@ -193,11 +221,39 @@ const Navbar = () => {
               </>
             )}
           </ul>
+
+          {/* Mobile Menu Button */}
+          <button 
+            onClick={() => setMobileMenuOpen(true)} 
+            className="mobile-menu-button"
+            aria-label="Open menu"
+            style={{
+              display: 'none',
+              background: 'none',
+              border: 'none',
+              fontSize: '24px',
+              cursor: 'pointer',
+              padding: '8px',
+              color: '#1a1a1a'
+            }}
+          >
+            ☰
+          </button>
         </div>
         {isPostPage && <ReadingProgress />}
       </nav>
 
+      {/* Spacer to prevent content from hiding under fixed navbar */}
       <div style={{ height: isSlim ? '50px' : '70px' }} />
+
+      {/* Mobile Menu Component */}
+      <MobileMenu 
+        isOpen={mobileMenuOpen} 
+        onClose={() => setMobileMenuOpen(false)}
+        user={user}
+        userRole={userRole}
+        onLogout={() => setLogoutDialogOpen(true)}
+      />
 
       <Dialog 
         isOpen={logoutDialogOpen}
@@ -208,6 +264,18 @@ const Navbar = () => {
         confirmText="Sign Out"
         cancelText="Remain Signed In"
       />
+
+      {/* Add responsive CSS for mobile menu button */}
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-nav {
+            display: none !important;
+          }
+          .mobile-menu-button {
+            display: block !important;
+          }
+        }
+      `}</style>
     </>
   );
 };

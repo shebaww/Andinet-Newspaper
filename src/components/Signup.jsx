@@ -23,7 +23,7 @@ const Signup = () => {
       setError('');
       setLoading(true);
       await signup(email, password, displayName);
-      navigate('/dashboard');
+      navigate('/');
     } catch (error) {
       console.error('Signup error:', error);
       setError('Failed to create account. Please try again.');

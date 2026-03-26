@@ -462,3 +462,363 @@ button, .nav-link, select, input[type="file"] {
 .nyt-table td, .nyt-table th {
   padding: 20px 15px; /* Larger targets for table rows */
 }
+
+/* Add this to your main CSS file (likely src/index.css or src/App.css) */
+
+/* Mobile Responsive Breakpoints */
+@media (max-width: 768px) {
+  /* Container padding */
+  .container {
+    padding: 0 16px !important;
+    max-width: 100% !important;
+  }
+
+  /* Masthead adjustments */
+  .site-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px 0 !important;
+  }
+
+  .masthead-title {
+    font-size: 2rem !important;
+    margin-bottom: 12px;
+  }
+
+  .masthead-nav-bar {
+    flex-direction: column;
+    gap: 8px !important;
+    font-size: 11px !important;
+    text-align: center !important;
+  }
+
+  .masthead-nav-bar > div {
+    text-align: center !important;
+  }
+
+  /* Search section */
+  .master-search {
+    margin: 20px 0 !important;
+  }
+
+  .search-container input {
+    font-size: 14px !important;
+    padding: 10px !important;
+  }
+
+  /* Grid system - convert to single column */
+  .grid-system {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 30px !important;
+  }
+
+  .grid-system > * {
+    grid-column: span 12 !important;
+    width: 100% !important;
+  }
+
+  /* Override any specific grid column spans */
+  [style*="gridColumn: 'span 8'"],
+  [style*="gridColumn: 'span 4'"],
+  [style*="gridColumn: 'span 2'"] {
+    grid-column: span 12 !important;
+  }
+
+  /* Tier-specific adjustments */
+  .tier-1, .tier-2, .tier-3 {
+    gap: 30px;
+  }
+
+  /* Lead story */
+  .headline.h-giant {
+    font-size: 2rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .headline.h-large {
+    font-size: 1.5rem !important;
+  }
+
+  .headline.h-medium {
+    font-size: 1.3rem !important;
+  }
+
+  /* Media frames */
+  .media-frame {
+    margin: 20px 0 !important;
+  }
+
+  .media-frame img {
+    height: auto !important;
+    max-height: 300px !important;
+    object-fit: cover !important;
+  }
+
+  /* Excerpts */
+  .excerpt {
+    font-size: 0.9rem !important;
+  }
+
+  /* Secondary stories */
+  [style*="marginBottom: '30px'"] {
+    margin-bottom: 25px !important;
+  }
+
+  /* Features grid - convert to single column */
+  .grid-system.tier-2 {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .grid-system.tier-2 > div {
+    margin-bottom: 30px;
+  }
+
+  /* Latest updates - convert to 2 column grid on tablet, 1 column on mobile */
+  .grid-system.tier-3 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+  }
+
+  .grid-system.tier-3 > div {
+    grid-column: span 1 !important;
+  }
+
+  /* Dashboard responsive */
+  .dashboard .grid-system {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dashboard .grid-system > div {
+    margin-bottom: 20px;
+  }
+
+  /* Tables - make scrollable on mobile */
+  .nyt-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .nyt-table th,
+  .nyt-table td {
+    padding: 10px !important;
+    font-size: 12px !important;
+  }
+
+  /* Stats cards */
+  [style*="gridColumn: 'span 4'"] > div {
+    padding: 20px !important;
+  }
+
+  [style*="fontSize: '3rem'"] {
+    font-size: 2rem !important;
+  }
+
+  /* Buttons */
+  .btn-heritage {
+    padding: 8px 16px !important;
+    font-size: 12px !important;
+  }
+
+  /* Navigation */
+  .navbar {
+    flex-wrap: wrap !important;
+    padding: 10px !important;
+  }
+
+  .navbar a, .navbar button {
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+  }
+
+  /* Post detail page */
+  .post-detail {
+    padding: 0 16px;
+  }
+
+  .post-detail .headline {
+    font-size: 1.8rem !important;
+  }
+
+  /* Comments section */
+  .comments-section {
+    padding: 20px 0;
+  }
+
+  .comment {
+    padding: 15px !important;
+  }
+
+  /* Profile page */
+  .profile-container {
+    padding: 20px;
+  }
+
+  /* Donation page */
+  .donation-container {
+    padding: 20px;
+  }
+}
+
+/* Tablet breakpoint (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .container {
+    padding: 0 24px !important;
+  }
+
+  /* Adjust grid for tablet */
+  .grid-system.tier-1 {
+    display: grid !important;
+    grid-template-columns: repeat(12, 1fr) !important;
+    gap: 20px !important;
+  }
+
+  [style*="gridColumn: 'span 8'"] {
+    grid-column: span 12 !important;
+  }
+
+  [style*="gridColumn: 'span 4'"] {
+    grid-column: span 12 !important;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .grid-system.tier-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+  }
+
+  .grid-system.tier-2 > div {
+    grid-column: span 1 !important;
+  }
+
+  .grid-system.tier-3 {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 20px !important;
+  }
+
+  .grid-system.tier-3 > div {
+    grid-column: span 1 !important;
+  }
+
+  /* Dashboard stats cards */
+  .dashboard .grid-system {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 20px !important;
+  }
+}
+
+/* Small mobile (below 480px) */
+@media (max-width: 480px) {
+  .grid-system.tier-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .headline.h-giant {
+    font-size: 1.6rem !important;
+  }
+
+  .headline.h-large {
+    font-size: 1.3rem !important;
+  }
+
+  .masthead-title {
+    font-size: 1.8rem !important;
+  }
+
+  .kicker {
+    font-size: 10px !important;
+  }
+
+  .byline {
+    font-size: 10px !important;
+  }
+
+  .search-container input {
+    font-size: 12px !important;
+    padding: 8px !important;
+  }
+
+  /* Stack dashboard stats cards */
+  .dashboard .grid-system {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
+
+/* Add to your main CSS file */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Prevent layout shift for lazy-loaded images */
+img[loading="lazy"] {
+  background-color: #f0f0f0;
+}
+
+/* Optional: Add blur-up effect for lazy images */
+img[loading="lazy"] {
+  transition: opacity 0.3s ease-in-out;
+}
+
+img[loading="lazy"]:not([src]) {
+  opacity: 0;
+}
+
+ .homepage-grid {
+    display: grid;
+    gap: 30px;
+  }
+
+  .lead-story-col {
+    grid-column: span 8;
+  }
+
+  .secondary-col {
+    grid-column: span 4;
+  }
+
+  .feature-col {
+    grid-column: span 4;
+  }
+
+  .latest-col {
+    grid-column: span 2;
+  }
+
+  @media (max-width: 768px) {
+    .lead-story-col,
+    .secondary-col,
+    .feature-col,
+    .latest-col {
+      grid-column: span 12;
+    }
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .lead-story-col {
+      grid-column: span 12;
+    }
+    .secondary-col {
+      grid-column: span 12;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .feature-col {
+      grid-column: span 6;
+    }
+    .latest-col {
+      grid-column: span 4;
+    }
+  }

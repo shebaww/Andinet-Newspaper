@@ -1,15 +1,21 @@
+// src/components/HomePage.jsx - Complete fixed version
 import { useState, useEffect } from "react";
 import { db } from "../firebase/config";
-import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
+import { collection, query, where, orderBy, getDocs, limit, startAfter } from "firebase/firestore";
 import { Link } from "react-router-dom";
 import Skeleton from "./common/Skeleton";
+import Pagination from './common/Pagination';
 
 const HomePage = () => {
   const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [lastVisible, setLastVisible] = useState(null);
+  const POSTS_PER_PAGE = 12;
+  
   // API states
   const [weather, setWeather] = useState({
     temp: "--",
@@ -134,30 +140,80 @@ const HomePage = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Fetch Posts with Pagination
   useEffect(() => {
     const fetchPosts = async () => {
+      setLoading(true);
       try {
-        const q = query(
-          collection(db, "posts"),
-          where("status", "==", "published"),
-          orderBy("createdAt", "desc")
-        );
+        let q;
+        
+        if (currentPage === 1) {
+          q = query(
+            collection(db, "posts"),
+            where("status", "==", "published"),
+            orderBy("createdAt", "desc"),
+            limit(POSTS_PER_PAGE)
+          );
+        } else {
+          if (!lastVisible) {
+            const firstPageQuery = query(
+              collection(db, "posts"),
+              where("status", "==", "published"),
+              orderBy("createdAt", "desc"),
+              limit(POSTS_PER_PAGE * (currentPage - 1))
+            );
+            const firstPageSnapshot = await getDocs(firstPageQuery);
+            const lastDocFromPrev = firstPageSnapshot.docs[firstPageSnapshot.docs.length - 1];
+            
+            q = query(
+              collection(db, "posts"),
+              where("status", "==", "published"),
+              orderBy("createdAt", "desc"),
+              startAfter(lastDocFromPrev),
+              limit(POSTS_PER_PAGE)
+            );
+          } else {
+            q = query(
+              collection(db, "posts"),
+              where("status", "==", "published"),
+              orderBy("createdAt", "desc"),
+              startAfter(lastVisible),
+              limit(POSTS_PER_PAGE)
+            );
+          }
+        }
+        
         const querySnapshot = await getDocs(q);
         const postsData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
+        
         setPosts(postsData);
         setFilteredPosts(postsData);
+        
+        if (querySnapshot.docs.length === POSTS_PER_PAGE) {
+          setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1]);
+        } else {
+          setLastVisible(null);
+        }
+        
+        const totalQuery = query(collection(db, "posts"), where("status", "==", "published"));
+        const totalSnapshot = await getDocs(totalQuery);
+        const totalCount = totalSnapshot.size;
+        setTotalPages(Math.ceil(totalCount / POSTS_PER_PAGE));
+        
       } catch (error) {
         console.error("Error fetching posts:", error);
       } finally {
         setLoading(false);
       }
     };
+    
     fetchPosts();
-  }, []);
+  }, [currentPage]);
 
+  // Search filter
   useEffect(() => {
     const filtered = posts.filter(
       (post) =>
@@ -168,7 +224,7 @@ const HomePage = () => {
     setFilteredPosts(filtered);
   }, [searchTerm, posts]);
 
-  if (loading)
+  if (loading) {
     return (
       <div className="container" style={{ marginTop: '50px' }}>
         <div style={{ textAlign: 'center', marginBottom: '80px' }}>
@@ -194,6 +250,7 @@ const HomePage = () => {
         </div>
       </div>
     );
+  }
 
   const leadStory = filteredPosts[0];
   const secondaryStories = filteredPosts.slice(1, 4);
@@ -250,8 +307,8 @@ const HomePage = () => {
 
       <main style={{ marginTop: '50px' }}>
         {/* Tier 1: Lead Story & Secondary */}
-        <div className="grid-system tier-1">
-          <div className="column-border" style={{ gridColumn: 'span 8' }}>
+        <div className="grid-system tier-1 homepage-grid">
+          <div className="lead-story-col column-border">
             {leadStory && (
               <article>
                 <span className="kicker">{leadStory.category || "News"}</span>
@@ -260,7 +317,13 @@ const HomePage = () => {
                 </Link>
                 <div className="media-frame">
                   {leadStory.imageUrl && (
-                    <img src={leadStory.imageUrl} alt="Lead" />
+                    <img 
+                      src={leadStory.imageUrl} 
+                      alt="Lead" 
+                      loading="lazy"
+                      width="100%"
+                      height="auto"
+                    />
                   )}
                 </div>
                 <p className="excerpt" style={{ fontSize: "1.1rem" }}>
@@ -270,7 +333,7 @@ const HomePage = () => {
               </article>
             )}
           </div>
-          <div style={{ gridColumn: 'span 4' }}>
+          <div className="secondary-col">
             {secondaryStories.map((post, idx) => (
               <article
                 key={post.id}
@@ -294,9 +357,9 @@ const HomePage = () => {
         </div>
 
         {/* Tier 2: Features */}
-        <div className="grid-system tier-2">
+        <div className="grid-system tier-2 homepage-grid">
           {featureStories.map((post) => (
-            <div key={post.id} className="column-border" style={{ gridColumn: 'span 4' }}>
+            <div key={post.id} className="feature-col column-border">
               <article>
                 <span className="kicker">{post.category || "Feature"}</span>
                 <Link to={`/post/${post.id}`} className="headline h-medium">
@@ -304,7 +367,14 @@ const HomePage = () => {
                 </Link>
                 <div className="media-frame" style={{ border: 'none', padding: 0 }}>
                   {post.imageUrl && (
-                    <img src={post.imageUrl} alt="Feature" style={{ height: '200px', objectFit: 'cover' }} />
+                    <img 
+                      src={post.imageUrl} 
+                      alt="Feature" 
+                      style={{ height: '200px', objectFit: 'cover', width: '100%' }}
+                      loading="lazy"
+                      width="100%"
+                      height="200"
+                    />
                   )}
                 </div>
                 <p className="excerpt" style={{ fontSize: "0.85rem" }}>
@@ -317,9 +387,9 @@ const HomePage = () => {
         </div>
 
         {/* Tier 3: Latest Updates */}
-        <div className="grid-system tier-3">
+        <div className="grid-system tier-3 homepage-grid">
           {latestUpdates.map((post) => (
-            <div key={post.id} style={{ gridColumn: 'span 2' }}>
+            <div key={post.id} className="latest-col">
               <article style={{ borderTop: '1px solid black', paddingTop: '10px' }}>
                 <Link to={`/post/${post.id}`} className="headline h-small">
                   {post.title}
@@ -331,6 +401,14 @@ const HomePage = () => {
             </div>
           ))}
         </div>
+        
+        {filteredPosts.length > 0 && totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
 
         {filteredPosts.length === 0 && (
           <p style={{ textAlign: "center", marginTop: "50px", fontFamily: 'var(--font-sans)', fontStyle: 'italic' }}>

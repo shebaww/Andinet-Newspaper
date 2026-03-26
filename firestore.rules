@@ -1,8 +1,9 @@
+// firestore.rules - Add this to your existing rules
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper functions for reusable conditions
+    // Helper functions (keep your existing ones)
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -24,84 +25,66 @@ service cloud.firestore {
     
     // Users collection
     match /users/{userId} {
-      allow read: if true;  // Anyone can read user profiles
-      allow create: if isOwner(userId);  // Users can only create their own profile
-      allow update: if isOwner(userId) || isAdmin();  // Users can update their own, admins can update any
-      allow delete: if false;  // Prevent accidental user deletion
+      allow read: if true;
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if false;
     }
     
     // Posts collection
     match /posts/{postId} {
-      allow read: if true;  // Anyone can read published posts
-      allow create: if isEditor() && 
-        request.resource.data.authorId == request.auth.uid &&
-        request.resource.data.createdAt == request.time &&
-        request.resource.data.updatedAt == request.time;
-      
-      allow update: if isEditor() && 
-        (resource.data.authorId == request.auth.uid || isAdmin()) &&
-        request.resource.data.updatedAt == request.time;
-      
-      allow delete: if isEditor() && 
-        (resource.data.authorId == request.auth.uid || isAdmin());
-      
-      // Validate post structure
-      allow create, update: if request.resource.data.keys().hasAll([
-        'title', 'content', 'authorId', 'createdAt', 'updatedAt', 'status'
-      ]) &&
-        request.resource.data.title is string &&
-        request.resource.data.title.size() >= 3 &&
-        request.resource.data.title.size() <= 200 &&
-        request.resource.data.content is string &&
-        request.resource.data.content.size() >= 10 &&
-        request.resource.data.status in ['draft', 'published', 'archived'];
+      allow read: if true;
+      allow create: if isEditor();
+      allow update: if isEditor();
+      allow delete: if isAdmin();
     }
     
     // Comments collection
     match /comments/{commentId} {
-      allow read: if true;  // Anyone can read comments
-      allow create: if isAuthenticated() && 
-        request.resource.data.authorId == request.auth.uid &&
-        request.resource.data.createdAt == request.time &&
-        request.resource.data.postId != null;
-      
-      allow update: if isAuthenticated() && 
-        resource.data.authorId == request.auth.uid &&
-        request.resource.data.updatedAt == request.time;
-      
-      allow delete: if isAuthenticated() && 
-        (resource.data.authorId == request.auth.uid || isAdmin() || 
-         get(/databases/$(database)/documents/posts/$(resource.data.postId)).data.authorId == request.auth.uid);
-      
-      // Validate comment structure
-      allow create, update: if request.resource.data.keys().hasAll([
-        'content', 'authorId', 'postId', 'createdAt'
-      ]) &&
-        request.resource.data.content is string &&
-        request.resource.data.content.size() >= 1 &&
-        request.resource.data.content.size() <= 1000;
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+      allow delete: if isAuthenticated() && (resource.data.authorId == request.auth.uid || isAdmin());
+    }
+    
+    // Donations collection - FIX THIS SECTION
+    match /donations/{donationId} {
+      allow read: if isAdmin();  // Only admins can read donations
+      allow create: if true;     // Anyone can create a donation (even anonymous)
+      allow update: if false;    // Donations cannot be edited
+      allow delete: if false;    // Donations cannot be deleted
     }
     
     // Categories collection
     match /categories/{categoryId} {
-      allow read: if true;  // Anyone can read categories
-      allow create: if isAdmin();  // Only admins can create categories
+      allow read: if true;
+      allow create: if isAdmin();
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
     
-    // Media library (for tracking uploaded images)
+    // Media library
     match /media/{mediaId} {
       allow read: if true;
-      allow create: if isAuthenticated() &&
-        request.resource.data.userId == request.auth.uid &&
-        request.resource.data.uploadedAt == request.time;
-      
-      allow update: if isAuthenticated() && 
-        resource.data.userId == request.auth.uid;
-      
-      allow delete: if isAuthenticated() && 
-        (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+    
+    // Contacts collection for contact form
+    match /contacts/{contactId} {
+      allow read: if isAdmin();
+      allow create: if true;  // Anyone can submit contact form
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    // Activity logs for admin
+    match /activity_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }

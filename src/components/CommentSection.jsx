@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { commentLimiter } from '../utils/rateLimiter';
+import { sanitizeInput } from '../utils/sanitize';
 import { db } from '../firebase/config';
 import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
@@ -37,8 +39,19 @@ const CommentSection = ({ postId }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user || !newComment.trim()) return;
+    
+    // Rate limiting check
+  const userKey = `comment_${user.uid}`;
+  if (!commentLimiter.check(userKey)) {
+    setToast({ 
+      message: 'Too many comments. Please wait a moment before posting again.', 
+      type: 'error' 
+    });
+    return;
+  }
 
-    const commentContent = newComment.trim();
+    const commentContent = sanitizeInput(newComment.trim()); // Sanitize comment
+    
     setNewComment('');
     
     // Optimistic UI update
@@ -48,8 +61,8 @@ const CommentSection = ({ postId }) => {
       postId,
       content: commentContent,
       authorId: user.uid,
-      authorName: userProfile?.displayName || user.email.split('@')[0],
-      createdAt: { toDate: () => new Date() }, // Mock Firestore timestamp
+      authorName: sanitizeInput(userProfile?.displayName || user.email.split('@')[0]),
+      createdAt: { toDate: () => new Date() },
       isOptimistic: true
     };
     
@@ -60,14 +73,14 @@ const CommentSection = ({ postId }) => {
         postId,
         content: commentContent,
         authorId: user.uid,
-        authorName: userProfile?.displayName || user.email.split('@')[0],
+        authorName: sanitizeInput(userProfile?.displayName || user.email.split('@')[0]),
         createdAt: serverTimestamp()
       });
       setToast({ message: 'Correspondence published successfully', type: 'success' });
     } catch (error) {
       console.error('Error adding comment:', error);
       setComments(prev => prev.filter(c => c.id !== tempId));
-      setNewComment(commentContent);
+      setNewComment(newComment.trim());
       setToast({ message: 'Failed to publish correspondence', type: 'error' });
     }
   };
@@ -157,7 +170,7 @@ const CommentSection = ({ postId }) => {
               </div>
             </div>
             <div style={{ fontSize: '15px', lineHeight: '1.5', color: '#333' }}>
-              {comment.content}
+          {sanitizeInput(comment.content)}
             </div>
             {(userRole === 'admin' || user?.uid === comment.authorId) && (
               <button 

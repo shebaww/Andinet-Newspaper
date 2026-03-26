@@ -1,12 +1,14 @@
+// Dashboard.jsx - Replace with this fixed version
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase/config';
-import { collection, query, where, getDocs, deleteDoc, doc, orderBy, updateDoc } from 'firebase/firestore';
+import { collection, limit, query, where, getDocs, deleteDoc, doc, orderBy, updateDoc, startAfter, getCountFromServer } from 'firebase/firestore';
 import { Link, useNavigate } from 'react-router-dom';
 import UserManager from './UserManager';
 import DonationManager from './DonationManager';
 import Dialog from './common/Dialog';
 import Toast from './common/Toast';
+import Pagination from './common/Pagination';
 
 const Dashboard = () => {
   const { user, userRole, userProfile } = useAuth();
@@ -17,6 +19,11 @@ const Dashboard = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState(null);
   const [toast, setToast] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [lastDoc, setLastDoc] = useState(null);
+  const [firstDoc, setFirstDoc] = useState(null);
+  const POSTS_PER_PAGE = 10;
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -24,26 +31,76 @@ const Dashboard = () => {
       
       setLoading(true);
       try {
-        let q;
+        // Build the query based on user role
+        let baseQuery;
         if (userRole === 'admin') {
-          q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+          baseQuery = query(
+            collection(db, 'posts'), 
+            orderBy('createdAt', 'desc')
+          );
         } else if (userRole === 'editor') {
-          q = query(collection(db, 'posts'), where('authorId', '==', user.uid), orderBy('createdAt', 'desc'));
+          baseQuery = query(
+            collection(db, 'posts'), 
+            where('authorId', '==', user.uid),
+            orderBy('createdAt', 'desc')
+          );
         } else {
           setPosts([]);
           setLoading(false);
           return;
         }
 
-        const querySnapshot = await getDocs(q);
+        // Get total count using getCountFromServer for better performance
+        const countSnapshot = await getCountFromServer(baseQuery);
+        const totalCount = countSnapshot.data().count;
+        setTotalPages(Math.ceil(totalCount / POSTS_PER_PAGE));
+        
+        // Calculate correct total views (need to fetch all posts for views sum, but only once)
+        // This is still a limitation, but better than before
+        if (totalCount > 0) {
+          const allPostsSnapshot = await getDocs(baseQuery);
+          const totalViews = allPostsSnapshot.docs.reduce((acc, doc) => {
+            const data = doc.data();
+            return acc + (data.views || 0);
+          }, 0);
+          setStats({ totalPosts: totalCount, totalViews });
+        } else {
+          setStats({ totalPosts: 0, totalViews: 0 });
+        }
+
+        // Handle pagination
+        let paginatedQuery;
+        if (currentPage === 1) {
+          paginatedQuery = query(baseQuery, limit(POSTS_PER_PAGE));
+        } else {
+          if (!lastDoc) {
+            // Need to fetch up to the current page to get the cursor
+            const allDocsUpToPage = await getDocs(query(baseQuery, limit(POSTS_PER_PAGE * (currentPage - 1))));
+            const lastDocOfPrevPage = allDocsUpToPage.docs[allDocsUpToPage.docs.length - 1];
+            paginatedQuery = query(baseQuery, startAfter(lastDocOfPrevPage), limit(POSTS_PER_PAGE));
+          } else {
+            paginatedQuery = query(baseQuery, startAfter(lastDoc), limit(POSTS_PER_PAGE));
+          }
+        }
+
+        const querySnapshot = await getDocs(paginatedQuery);
         const postsData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
         setPosts(postsData);
-
-        const totalViews = postsData.reduce((acc, curr) => acc + (curr.views || 0), 0);
-        setStats({ totalPosts: postsData.length, totalViews });
+        
+        // Store last document for next page
+        if (querySnapshot.docs.length === POSTS_PER_PAGE) {
+          setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
+        } else {
+          setLastDoc(null);
+        }
+        
+        // Store first document for previous page
+        if (querySnapshot.docs.length > 0) {
+          setFirstDoc(querySnapshot.docs[0]);
+        }
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -53,7 +110,7 @@ const Dashboard = () => {
     };
 
     fetchDashboardData();
-  }, [user, userRole]);
+  }, [user, userRole, currentPage]);
 
   const confirmDelete = (id) => {
     setPostToDelete(id);
@@ -66,6 +123,8 @@ const Dashboard = () => {
     try {
       await deleteDoc(doc(db, 'posts', postToDelete));
       setPosts(posts.filter(post => post.id !== postToDelete));
+      // Refresh stats after deletion
+      setStats(prev => ({ ...prev, totalPosts: prev.totalPosts - 1 }));
       setToast({ message: 'Article removed from archives', type: 'success' });
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -160,41 +219,53 @@ const Dashboard = () => {
             )}
           </div>
         ) : (
-          <table className="nyt-table">
-            <thead>
-              <tr>
-                <th>DATE</th>
-                <th>HEADLINE</th>
-                {userRole === 'admin' && <th>REPORTER</th>}
-                <th>VIEWS</th>
-                <th>ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {publishedPosts.map(post => (
-                <tr key={post.id}>
-                  <td style={{ fontSize: '12px' }}>
-                    {post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : 'N/A'}
-                  </td>
-                  <td style={{ fontWeight: 700, maxWidth: '400px' }}>{post.title}</td>
-                  {userRole === 'admin' && <td style={{ fontSize: '12px', textTransform: 'uppercase' }}>{post.authorName}</td>}
-                  <td>{post.views || 0}</td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '15px' }}>
-                      <Link to={`/post/${post.id}`} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-ink)' }}>VIEW</Link>
-                      <Link to={`/edit-post/${post.id}`} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-ink)' }}>EDIT</Link>
-                      <button 
-                        onClick={() => confirmDelete(post.id)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d32f2f', fontSize: '11px', fontWeight: 700 }}
-                      >
-                        REMOVE
-                      </button>
-                    </div>
-                  </td>
+          <>
+            <table className="nyt-table">
+              <thead>
+                <tr>
+                  <th>DATE</th>
+                  <th>HEADLINE</th>
+                  {userRole === 'admin' && <th>REPORTER</th>}
+                  <th>VIEWS</th>
+                  <th>ACTIONS</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {publishedPosts.map(post => (
+                  <tr key={post.id}>
+                    <td style={{ fontSize: '12px' }}>
+                      {post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : 'N/A'}
+                    </td>
+                    <td style={{ fontWeight: 700, maxWidth: '400px' }}>{post.title}</td>
+                    {userRole === 'admin' && <td style={{ fontSize: '12px', textTransform: 'uppercase' }}>{post.authorName}</td>}
+                    <td>{post.views || 0}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '15px' }}>
+                        <Link to={`/post/${post.id}`} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-ink)' }}>VIEW</Link>
+                        <Link to={`/edit-post/${post.id}`} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-ink)' }}>EDIT</Link>
+                        <button 
+                          onClick={() => confirmDelete(post.id)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d32f2f', fontSize: '11px', fontWeight: 700 }}
+                        >
+                          REMOVE
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            {totalPages > 1 && (
+              <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'center' }}>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
+            )}
+          </>
         )}
       </section>
 

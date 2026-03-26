@@ -49,3 +49,33 @@ functions/
 # OS files
 .DS_Store
 Thumbs.db
+
+/src/config/apiKeys.js
+
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.development
+
+# API keys file
+src/config/apiKeys.js
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Firebase
+.firebase/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
