@@ -1,15 +1,10 @@
-// firestore.rules - Add this to your existing rules
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper functions (keep your existing ones)
+    // Helper functions
     function isAuthenticated() {
       return request.auth != null;
-    }
-    
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
     }
     
     function isAdmin() {
@@ -23,6 +18,10 @@ service cloud.firestore {
               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
     
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
     // Users collection
     match /users/{userId} {
       allow read: if true;
@@ -31,60 +30,20 @@ service cloud.firestore {
       allow delete: if false;
     }
     
-    // Posts collection
+    // Posts collection - FIXED FOR PUBLISHING
     match /posts/{postId} {
+      // Anyone can read posts
       allow read: if true;
+      
+      // Editors can create posts
       allow create: if isEditor();
-      allow update: if isEditor();
+      
+      // Editors can update posts (including publishing)
+      allow update: if isEditor() && 
+                     (isAdmin() || resource.data.authorId == request.auth.uid);
+      
+      // Only admins can delete
       allow delete: if isAdmin();
-    }
-    
-    // Comments collection
-    match /comments/{commentId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && resource.data.authorId == request.auth.uid;
-      allow delete: if isAuthenticated() && (resource.data.authorId == request.auth.uid || isAdmin());
-    }
-    
-    // Donations collection - FIX THIS SECTION
-    match /donations/{donationId} {
-      allow read: if isAdmin();  // Only admins can read donations
-      allow create: if true;     // Anyone can create a donation (even anonymous)
-      allow update: if false;    // Donations cannot be edited
-      allow delete: if false;    // Donations cannot be deleted
-    }
-    
-    // Categories collection
-    match /categories/{categoryId} {
-      allow read: if true;
-      allow create: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
-    }
-    
-    // Media library
-    match /media/{mediaId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-    }
-    
-    // Contacts collection for contact form
-    match /contacts/{contactId} {
-      allow read: if isAdmin();
-      allow create: if true;  // Anyone can submit contact form
-      allow update: if false;
-      allow delete: if false;
-    }
-    
-    // Activity logs for admin
-    match /activity_logs/{logId} {
-      allow read: if isAdmin();
-      allow create: if isAuthenticated();
-      allow update: if false;
-      allow delete: if false;
     }
   }
 }
