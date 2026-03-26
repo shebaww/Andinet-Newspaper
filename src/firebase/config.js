@@ -4,20 +4,20 @@ import { getAuth, GoogleAuthProvider, connectAuthEmulator } from "firebase/auth"
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 
-// Use environment variables for production, fallback for development
+// Use environment variables
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyB-2thip8B-f5g_7Mfnm2n2fN2jHZrKzRw",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "andinet-newspaper.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "andinet-newspaper",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "andinet-newspaper.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "484283375010",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:484283375010:web:0f40a84965af07297a66fb",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-GKYNLMN93X"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// WARNING: In production, environment variables MUST be set
+// Validate in production
 if (import.meta.env.PROD && !import.meta.env.VITE_FIREBASE_API_KEY) {
-  console.error('🚨 CRITICAL: Firebase API key not set in environment variables!');
+  console.error('❌ Firebase API key missing! Check Netlify environment variables.');
 }
 
 const app = initializeApp(firebaseConfig);
@@ -27,7 +27,7 @@ export const googleProvider = new GoogleAuthProvider();
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// Connect to emulators in development
+// Connect to emulators in development only
 if (import.meta.env.DEV) {
   connectAuthEmulator(auth, "http://127.0.0.1:9099");
   connectFirestoreEmulator(db, "127.0.0.1", 8080);
