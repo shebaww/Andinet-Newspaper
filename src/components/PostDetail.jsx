@@ -6,49 +6,72 @@ import { doc, getDoc, updateDoc, increment } from "firebase/firestore";
 import CommentSection from "./CommentSection";
 import Skeleton from "./common/Skeleton";
 import SEO from "./common/SEO";
+import { useAuth } from "../context/AuthContext"; // Add this import
 
 const PostDetail = () => {
   const { id } = useParams();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user, userRole } = useAuth(); // Add this to track auth state
 
   useEffect(() => {
     const fetchPost = async () => {
+      console.log("🔍 ===== STARTING POST FETCH =====");
+      console.log("📌 Post ID from URL:", id);
+      console.log("👤 Current user:", user?.uid);
+      console.log("🎭 User role:", userRole);
+      console.log("🔐 Is authenticated:", !!user);
+      
       if (!id) {
+        console.log("❌ No ID provided");
         setError("No post ID provided");
         setLoading(false);
         return;
       }
 
       try {
-        console.log("Fetching post with ID:", id);
+        console.log("📡 Fetching from Firestore: posts/", id);
         const docRef = doc(db, "posts", id);
         const docSnap = await getDoc(docRef);
-
+        
+        console.log("📄 Document exists?", docSnap.exists());
+        console.log("🔑 Document metadata:", docSnap.metadata);
+        
         if (docSnap.exists()) {
           const postData = { id: docSnap.id, ...docSnap.data() };
-          console.log("Post found:", postData.title);
+          console.log("✅ Post found:", postData.title);
+          console.log("📊 Post status:", postData.status);
+          console.log("📝 Full post data:", postData);
           setPost(postData);
 
-          // Increment view count
-          await updateDoc(docRef, { views: increment(1) });
+          // Increment view count - don't await to avoid blocking
+          updateDoc(docRef, { views: increment(1) })
+            .catch(err => console.warn("⚠️ View count update failed:", err));
+          console.log("👁️ View count incremented");
         } else {
-          console.log("No post found with ID:", id);
+          console.log("❌❌❌ NO POST FOUND with ID:", id);
+          console.log("🔍 This document does not exist in Firestore");
           setError("Article not found in the archives");
         }
       } catch (error) {
-        console.error("Error fetching post:", error);
-        setError("Failed to load article. Please try again.");
+        console.error("💥💥💥 FIRESTORE ERROR 💥💥💥");
+        console.error("Error code:", error.code);
+        console.error("Error message:", error.message);
+        console.error("Full error object:", error);
+        console.error("Error stack:", error.stack);
+        setError(`Failed to load article: ${error.message || "Please try again."}`);
       } finally {
         setLoading(false);
+        console.log("🏁 Fetch completed. Loading:", false, "Error:", !!error);
       }
     };
 
     fetchPost();
-  }, [id]);
+  }, [id, user, userRole]); // Added dependencies
 
   if (loading) {
+    console.log("⏳ Rendering loading state...");
     return (
       <div className="container" style={{ marginTop: "50px" }}>
         <div style={{ textAlign: "center", marginBottom: "50px" }}>
@@ -65,6 +88,7 @@ const PostDetail = () => {
   }
 
   if (error || !post) {
+    console.log("⚠️ Rendering error state. Error:", error, "Post exists:", !!post);
     return (
       <div
         className="container"
@@ -102,6 +126,7 @@ const PostDetail = () => {
     );
   }
 
+  console.log("✅ Rendering full article:", post.title);
   return (
     <>
       <SEO

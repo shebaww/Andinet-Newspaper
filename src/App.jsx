@@ -24,6 +24,7 @@ import { initGA, trackPageView } from './utils/analytics';
 function AppRoutes() {
   const { loading } = useAuth();
   const location = useLocation();
+  const { userRole } = useAuth();
 
   useEffect(() => {
     trackPageView(location.pathname);
@@ -51,6 +52,7 @@ function AppRoutes() {
         <Route path="/donate" element={<Donate />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+    <Route path="/test" element={<div>TEST PAGE - {userRole}</div>} />
         <Route path="/signup" element={<Signup />} />
         <Route
           path="/profile"
