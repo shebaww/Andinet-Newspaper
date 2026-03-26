@@ -184,7 +184,7 @@ const PostDetail = () => {
                   src={post.imageUrl}
                   alt={post.title}
                   loading="lazy"
-                  width="100%"
+                  width="50%"
                   height="auto"
                   style={{ width: "100%", height: "auto" }}
                 />
@@ -196,7 +196,6 @@ const PostDetail = () => {
                     textAlign: "center",
                   }}
                 >
-                  Staff Photo / Gazette Agency
                 </div>
               </div>
             )}

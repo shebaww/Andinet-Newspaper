@@ -30,19 +30,52 @@ service cloud.firestore {
       allow delete: if false;
     }
     
-    // Posts collection - FIXED FOR PUBLISHING
+    // Posts collection
     match /posts/{postId} {
-      // Anyone can read posts
       allow read: if true;
-      
-      // Editors can create posts
       allow create: if isEditor();
-      
-      // Editors can update posts (including publishing)
       allow update: if isEditor() && 
                      (isAdmin() || resource.data.authorId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+    
+    // COMMENTS COLLECTION - ADD THIS SECTION
+    match /comments/{commentId} {
+      // Anyone can read comments
+      allow read: if true;
       
-      // Only admins can delete
+      // Anyone logged in can create comments
+      allow create: if isAuthenticated();
+      
+      // Users can update their own comments
+      allow update: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+      
+      // Users can delete their own comments, admins can delete any
+      allow delete: if isAuthenticated() && 
+                     (resource.data.authorId == request.auth.uid || isAdmin());
+    }
+    
+    // Donations collection
+    match /donations/{donationId} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    // Contacts collection
+    match /contacts/{contactId} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    // Categories collection
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin();
       allow delete: if isAdmin();
     }
   }
