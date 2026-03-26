@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { db, storage } from '../firebase/config';
+import { db } from '../firebase/config';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadToImgBB, validateImage } from '../utils/imageUpload';
 
 const EditPost = () => {
   const { id } = useParams();
@@ -14,6 +14,9 @@ const EditPost = () => {
   const [currentImageUrl, setCurrentImageUrl] = useState('');
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageError, setImageError] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { user, userRole } = useAuth();
@@ -40,6 +43,7 @@ const EditPost = () => {
           setExcerpt(data.excerpt);
           setCategory(data.category);
           setCurrentImageUrl(data.imageUrl);
+          setImageUrl(data.imageUrl);
           setLoading(false);
         } else {
           alert('ARTICLE NOT FOUND.');
@@ -53,10 +57,24 @@ const EditPost = () => {
     fetchPost();
   }, [id, user, userRole, navigate]);
 
-  const handleImageChange = (e) => {
-    if (e.target.files[0]) {
-      setImage(e.target.files[0]);
-      setImagePreview(URL.createObjectURL(e.target.files[0]));
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setImage(file);
+    setImagePreview(URL.createObjectURL(file));
+    setImageError('');
+    setUploadingImage(true);
+
+    try {
+      validateImage(file);
+      const result = await uploadToImgBB(file);
+      setImageUrl(result.url);
+    } catch (error) {
+      setImageError(error.message);
+      setImageUrl(currentImageUrl);
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -65,19 +83,12 @@ const EditPost = () => {
     setSaving(true);
     
     try {
-      let imageUrl = currentImageUrl;
-      if (image) {
-        const storageRef = ref(storage, `posts/${Date.now()}_${image.name}`);
-        await uploadBytes(storageRef, image);
-        imageUrl = await getDownloadURL(storageRef);
-      }
-
       const postData = {
         title,
         content,
         excerpt: excerpt || content.substring(0, 150) + '...',
         category,
-        imageUrl,
+        imageUrl: imageUrl || currentImageUrl,
         updatedAt: serverTimestamp()
       };
 
@@ -143,19 +154,61 @@ const EditPost = () => {
 
           <div className="form-group">
             <label>FEATURED IMAGE</label>
-            {currentImageUrl && !imagePreview && (
+            {currentImageUrl && !imagePreview && !uploadingImage && (
               <div style={{ marginBottom: '10px' }}>
                 <p style={{ fontSize: '10px' }}>CURRENT IMAGE:</p>
-                <img src={currentImageUrl} alt="Current" style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
+                <img 
+                  src={currentImageUrl} 
+                  alt="Current" 
+                  style={{ width: '100px', height: '100px', objectFit: 'cover' }} 
+                  onError={(e) => {
+                    e.target.src = '/placeholder-image.jpg';
+                  }}
+                />
               </div>
             )}
-            <input type="file" accept="image/*" onChange={handleImageChange} />
-            {imagePreview && (
+            <input 
+              type="file" 
+              accept="image/jpeg,image/png,image/gif,image/webp" 
+              onChange={handleImageChange}
+              disabled={uploadingImage}
+            />
+            {uploadingImage && (
+              <div style={{ marginTop: '10px', color: '#666' }}>
+                Uploading new image...
+              </div>
+            )}
+            {imageError && (
+              <div style={{ marginTop: '10px', color: '#d32f2f' }}>
+                Error: {imageError}
+              </div>
+            )}
+            {imagePreview && !uploadingImage && (
               <div style={{ marginTop: '10px' }}>
                 <p style={{ fontSize: '10px' }}>NEW IMAGE PREVIEW:</p>
-                <img src={imagePreview} alt="Preview" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }} />
+                <img 
+                  src={imagePreview} 
+                  alt="Preview" 
+                  style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }} 
+                />
               </div>
             )}
+            <div style={{ marginTop: '10px', fontSize: '11px', color: '#666' }}>
+              Or paste image URL directly:
+              <input
+                type="text"
+                placeholder="https://i.ibb.co/xxxxx/image.jpg"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                style={{
+                  width: '100%',
+                  marginTop: '5px',
+                  padding: '8px',
+                  border: '1px solid #ccc',
+                  fontSize: '12px'
+                }}
+              />
+            </div>
           </div>
           
           <button type="submit" disabled={saving} style={{ width: '100%' }}>

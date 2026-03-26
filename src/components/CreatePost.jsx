@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { sanitizeContent, sanitizeInput } from "../utils/sanitize";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { db, storage } from "../firebase/config";
+import { db } from "../firebase/config";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Toast from "./common/Toast";
+import { uploadToImgBB, validateImage } from "../utils/imageUpload";
 
 const CreatePost = () => {
   const { user, userProfile } = useAuth();
@@ -20,6 +20,9 @@ const CreatePost = () => {
   );
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageError, setImageError] = useState("");
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [lastSaved, setLastSaved] = useState(null);
@@ -33,46 +36,57 @@ const CreatePost = () => {
       setContent(data.content || "");
       setExcerpt(data.excerpt || "");
       setCategory(data.category || "News");
+      setImageUrl(data.imageUrl || "");
     }
   }, []);
 
   // Auto-save logic
   const autoSave = useCallback(() => {
-    const data = { title, content, excerpt, category };
+    const data = { title, content, excerpt, category, imageUrl };
     localStorage.setItem("andinet_draft", JSON.stringify(data));
     setLastSaved(new Date().toLocaleTimeString());
-  }, [title, content, excerpt, category]);
+  }, [title, content, excerpt, category, imageUrl]);
 
   useEffect(() => {
     const timer = setInterval(autoSave, 30000);
     return () => clearInterval(timer);
   }, [autoSave]);
 
-  const handleImageChange = (e) => {
-    if (e.target.files[0]) {
-      setImage(e.target.files[0]);
-      setImagePreview(URL.createObjectURL(e.target.files[0]));
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setImage(file);
+    setImagePreview(URL.createObjectURL(file));
+    setImageError("");
+    setUploadingImage(true);
+
+    try {
+      validateImage(file);
+      const result = await uploadToImgBB(file);
+      setImageUrl(result.url);
+      setToast({ message: "Image uploaded successfully!", type: "success" });
+    } catch (error) {
+      setImageError(error.message);
+      setImageUrl("");
+      setToast({ message: error.message, type: "error" });
+    } finally {
+      setUploadingImage(false);
     }
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
 
     setLoading(true);
     try {
-      let imageUrl = "";
-      if (image) {
-        const storageRef = ref(storage, `posts/${Date.now()}_${image.name}`);
-        await uploadBytes(storageRef, image);
-        imageUrl = await getDownloadURL(storageRef);
-      }
-
       const postData = {
         title: sanitizeInput(title),
-        content: sanitizeContent(content), // Sanitize content
+        content: sanitizeContent(content),
         excerpt: sanitizeInput(excerpt || content.substring(0, 150) + "..."),
         category: sanitizeInput(category),
-        imageUrl,
+        imageUrl: imageUrl || "",
         authorId: user.uid,
         authorName: sanitizeInput(
           userProfile?.displayName || user.email.split("@")[0]
@@ -189,11 +203,65 @@ const CreatePost = () => {
               <label className="editor-label">Featured Media</label>
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/gif,image/webp"
                 onChange={handleImageChange}
                 style={{ fontSize: "12px" }}
+                disabled={uploadingImage}
               />
+              {uploadingImage && (
+                <div style={{ marginTop: "10px", color: "#666" }}>
+                  Uploading image...
+                </div>
+              )}
+              {imageError && (
+                <div style={{ marginTop: "10px", color: "#d32f2f" }}>
+                  Error: {imageError}
+                </div>
+              )}
+              {imageUrl && !uploadingImage && (
+                <div style={{ marginTop: "10px", fontSize: "12px", color: "#2e7d32" }}>
+                  ✓ Image uploaded successfully
+                </div>
+              )}
+              <div style={{ marginTop: "10px", fontSize: "11px", color: "#666" }}>
+                Or paste image URL directly:
+                <input
+                  type="text"
+                  placeholder="https://i.ibb.co/xxxxx/image.jpg"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  style={{
+                    width: "100%",
+                    marginTop: "5px",
+                    padding: "8px",
+                    border: "1px solid #ccc",
+                    fontSize: "12px"
+                  }}
+                />
+              </div>
             </div>
+
+            {imagePreview && (
+              <div style={{ marginTop: "10px" }}>
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  style={{ maxWidth: "200px", maxHeight: "200px", border: "1px solid #ccc" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImage(null);
+                    setImagePreview("");
+                    setImageUrl("");
+                    setImageError("");
+                  }}
+                  style={{ marginLeft: "10px", cursor: "pointer", fontSize: "12px" }}
+                >
+                  Remove
+                </button>
+              </div>
+            )}
 
             <div style={{ display: "flex", gap: "20px", marginTop: "40px" }}>
               <button
@@ -256,15 +324,18 @@ const CreatePost = () => {
               {new Date(publishedAt).toLocaleDateString().toUpperCase()}
             </div>
 
-            {imagePreview && (
+            {(imagePreview || imageUrl) && (
               <div
                 className="media-frame"
                 style={{ margin: "30px 0", padding: 0, border: "none" }}
               >
                 <img
-                  src={imagePreview}
+                  src={imagePreview || imageUrl}
                   alt="Preview"
                   style={{ width: "100%" }}
+                  onError={(e) => {
+                    e.target.src = "/placeholder-image.jpg";
+                  }}
                 />
               </div>
             )}
