@@ -32,7 +32,7 @@ const Footer = () => {
       
       <div className="container" style={{ textAlign: 'center', marginTop: '40px', fontSize: '11px', color: '#666' }}>
         <p>© {new Date().getFullYear()} THE ANDINET GAZETTE. ALL RIGHTS RESERVED.</p>
-        <p style={{ marginTop: '10px' }}>POWERED BY TRUTH & LOCAL ESPRESSO.</p>
+        <p style={{ marginTop: '10px' }}>Made By Business Club.</p>
       </div>
     </footer>
   );

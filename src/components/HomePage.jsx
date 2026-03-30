@@ -226,7 +226,7 @@ const HomePage = () => {
 
   if (loading) {
     return (
-      <div className="container" style={{ marginTop: '50px' }}>
+      <div className="container" style={{ marginTop: '50px', }}>
         <div style={{ textAlign: 'center', marginBottom: '80px' }}>
           <Skeleton width="60%" height="80px" margin="0 auto" />
           <Skeleton width="100%" height="40px" margin="20px auto" />
@@ -271,7 +271,7 @@ const HomePage = () => {
   return (
     <div className="container">
       <header className="site-header">
-        <Link to="/" className="masthead-title">
+        <Link to="/" className="masthead-title" style={{backgroundColor: "#c7b385", padding: "1.5rem"}}>
           The Andinet
         </Link>
         <div className="masthead-nav-bar">

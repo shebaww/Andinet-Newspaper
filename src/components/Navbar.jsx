@@ -45,25 +45,27 @@ const Navbar = () => {
         backgroundColor: '#ffffff',
         borderBottom: 'var(--border-double)',
         transition: 'all 0.2s ease',
-        padding: isSlim ? '8px 0' : '15px 0',
+        padding: isSlim ? '8px 0' : 'clamp(12px, 3vw, 15px) 0', // Responsive padding
         zIndex: 1000
       }}>
         <div className="container" style={{
           maxWidth: '1200px',
           margin: '0 auto',
-          padding: '0 20px',
+          padding: '0 clamp(16px, 4vw, 20px)', // Responsive horizontal padding
           display: 'flex',
-          alignItems: 'baseline',
+          alignItems: 'center', // Changed from baseline for better mobile alignment
           justifyContent: 'space-between',
-          flexWrap: 'wrap'
+          flexWrap: 'wrap',
+          gap: '12px' // Added gap for mobile
         }}>
           <Link to="/" style={{ 
             textDecoration: 'none', 
             fontFamily: 'var(--font-logo)', 
-            fontSize: isSlim ? '18px' : '22px', 
+            fontSize: isSlim ? 'clamp(18px, 5vw, 22px)' : 'clamp(20px, 6vw, 22px)', // Responsive font
             fontWeight: 800, 
             letterSpacing: '-0.3px',
-            color: '#1a1a1a'
+            color: '#1a1a1a',
+            whiteSpace: 'nowrap' // Prevent logo from wrapping
           }}>
            The Andinet
           </Link>
@@ -72,7 +74,7 @@ const Navbar = () => {
           <ul className="nav-links desktop-nav" style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '24px',
+            gap: 'clamp(16px, 3vw, 24px)', // Responsive gap
             margin: 0,
             padding: 0,
             listStyle: 'none'
@@ -81,12 +83,13 @@ const Navbar = () => {
             <li>
               <Link to="/" className="nav-link" style={{
                 fontFamily: 'var(--font-sans)',
-                fontSize: '11px',
+                fontSize: 'clamp(10px, 2.5vw, 11px)', // Responsive font
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
                 textDecoration: 'none',
-                color: '#1a1a1a'
+                color: '#1a1a1a',
+                whiteSpace: 'nowrap'
               }}>
                 Home
               </Link>
@@ -94,12 +97,13 @@ const Navbar = () => {
             <li>
               <Link to="/about" className="nav-link" style={{
                 fontFamily: 'var(--font-sans)',
-                fontSize: '11px',
+                fontSize: 'clamp(10px, 2.5vw, 11px)',
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
                 textDecoration: 'none',
-                color: '#1a1a1a'
+                color: '#1a1a1a',
+                whiteSpace: 'nowrap'
               }}>
                 About
               </Link>
@@ -107,12 +111,13 @@ const Navbar = () => {
             <li>
               <Link to="/donate" className="nav-link" style={{
                 fontFamily: 'var(--font-sans)',
-                fontSize: '11px',
+                fontSize: 'clamp(10px, 2.5vw, 11px)',
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
                 textDecoration: 'none',
-                color: '#d32f2f'
+                color: '#d32f2f',
+                whiteSpace: 'nowrap'
               }}>
                 Support
               </Link>
@@ -125,12 +130,13 @@ const Navbar = () => {
                   <li>
                     <Link to="/dashboard" className="nav-link" style={{
                       fontFamily: 'var(--font-sans)',
-                      fontSize: '11px',
+                      fontSize: 'clamp(10px, 2.5vw, 11px)',
                       fontWeight: 700,
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       textDecoration: 'none',
-                      color: '#1a1a1a'
+                      color: '#1a1a1a',
+                      whiteSpace: 'nowrap'
                     }}>
                       Dashboard
                     </Link>
@@ -141,12 +147,13 @@ const Navbar = () => {
                 <li>
                   <Link to="/profile" className="nav-link" style={{
                     fontFamily: 'var(--font-sans)',
-                    fontSize: '11px',
+                    fontSize: 'clamp(10px, 2.5vw, 11px)',
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
                     textDecoration: 'none',
-                    color: '#1a1a1a'
+                    color: '#1a1a1a',
+                    whiteSpace: 'nowrap'
                   }}>
                     Profile
                   </Link>
@@ -157,12 +164,13 @@ const Navbar = () => {
                   <li>
                     <Link to="/create-post" className="nav-link" style={{
                       fontFamily: 'var(--font-sans)',
-                      fontSize: '11px',
+                      fontSize: 'clamp(10px, 2.5vw, 11px)',
                       fontWeight: 700,
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       textDecoration: 'none',
-                      color: '#2e7d32'
+                      color: '#2e7d32',
+                      whiteSpace: 'nowrap'
                     }}>
                       Write
                     </Link>
@@ -179,11 +187,12 @@ const Navbar = () => {
                       cursor: 'pointer', 
                       padding: 0,
                       fontFamily: 'var(--font-sans)',
-                      fontSize: '11px',
+                      fontSize: 'clamp(10px, 2.5vw, 11px)',
                       fontWeight: 700,
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
-                      color: '#1a1a1a'
+                      color: '#1a1a1a',
+                      whiteSpace: 'nowrap'
                     }}
                   >
                     Logout
@@ -195,12 +204,13 @@ const Navbar = () => {
                 <li>
                   <Link to="/login" className="nav-link" style={{
                     fontFamily: 'var(--font-sans)',
-                    fontSize: '11px',
+                    fontSize: 'clamp(10px, 2.5vw, 11px)',
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
                     textDecoration: 'none',
-                    color: '#1a1a1a'
+                    color: '#1a1a1a',
+                    whiteSpace: 'nowrap'
                   }}>
                     Login
                   </Link>
@@ -208,12 +218,13 @@ const Navbar = () => {
                 <li>
                   <Link to="/signup" className="nav-link" style={{
                     fontFamily: 'var(--font-sans)',
-                    fontSize: '11px',
+                    fontSize: 'clamp(10px, 2.5vw, 11px)',
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
                     textDecoration: 'none',
-                    color: '#2e7d32'
+                    color: '#2e7d32',
+                    whiteSpace: 'nowrap'
                   }}>
                     Subscribe
                   </Link>
@@ -231,10 +242,13 @@ const Navbar = () => {
               display: 'none',
               background: 'none',
               border: 'none',
-              fontSize: '24px',
               cursor: 'pointer',
+              fontSize: 'clamp(40px, 10vw, 56px)', // Even larger
               padding: '8px',
-              color: '#1a1a1a'
+              color: '#1a1a1a',
+              lineHeight: 1,
+              minWidth: '44px', // Better touch target
+              minHeight: '44px' // Better touch target
             }}
           >
             ☰
@@ -243,8 +257,8 @@ const Navbar = () => {
         {isPostPage && <ReadingProgress />}
       </nav>
 
-      {/* Spacer to prevent content from hiding under fixed navbar */}
-      <div style={{ height: isSlim ? '50px' : '70px' }} />
+      {/* Spacer with responsive height */}
+      <div style={{ height: isSlim ? 'clamp(50px, 12vh, 70px)' : 'clamp(60px, 15vh, 80px)' }} />
 
       {/* Mobile Menu Component */}
       <MobileMenu 
@@ -265,14 +279,34 @@ const Navbar = () => {
         cancelText="Remain Signed In"
       />
 
-      {/* Add responsive CSS for mobile menu button */}
+      {/* Enhanced responsive CSS */}
       <style>{`
         @media (max-width: 768px) {
           .desktop-nav {
             display: none !important;
           }
           .mobile-menu-button {
-            display: block !important;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+          }
+        }
+        
+        /* Better touch targets for mobile */
+        @media (max-width: 768px) {
+          .nav-link,
+          .mobile-menu-button {
+            min-height: 44px;
+            min-width: 44px;
+            display: inline-flex;
+            align-items: center;
+          }
+        }
+        
+        /* Handle very small screens */
+        @media (max-width: 480px) {
+          .container {
+            gap: 8px;
           }
         }
       `}</style>

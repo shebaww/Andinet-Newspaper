@@ -1,4 +1,4 @@
-// Dashboard.jsx - Replace with this fixed version
+// Dashboard.jsx - Mobile responsive version
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase/config';
@@ -135,7 +135,12 @@ const Dashboard = () => {
   };
 
   if (loading) return (
-    <div style={{ textAlign: 'center', padding: '150px', fontFamily: 'var(--font-header)' }}>
+    <div style={{ 
+      textAlign: 'center', 
+      padding: 'clamp(80px, 20vh, 150px) clamp(20px, 5vw, 40px)', 
+      fontFamily: 'var(--font-header)',
+      fontSize: 'clamp(12px, 4vw, 14px)'
+    }}>
       ACCESSING EDITORIAL RECORDS...
     </div>
   );
@@ -145,116 +150,325 @@ const Dashboard = () => {
   const scheduledPosts = posts.filter(p => p.publishedAt && new Date(p.publishedAt.toDate ? p.publishedAt.toDate() : p.publishedAt) > now);
 
   return (
-    <div className="container" style={{ paddingBottom: '100px' }}>
-      <header style={{ padding: '60px 0', borderBottom: 'var(--border-double)', marginBottom: '50px', textAlign: 'center' }}>
-        <h1 className="h-giant" style={{ margin: 0 }}>
+    <div className="container" style={{ 
+      paddingBottom: 'clamp(60px, 15vh, 100px)',
+      paddingLeft: 'clamp(16px, 4vw, 20px)',
+      paddingRight: 'clamp(16px, 4vw, 20px)'
+    }}>
+      <header style={{ 
+        padding: 'clamp(40px, 10vh, 60px) 0', 
+        borderBottom: 'var(--border-double)', 
+        marginBottom: 'clamp(30px, 8vh, 50px)', 
+        textAlign: 'center' 
+      }}>
+        <h1 className="h-giant" style={{ 
+          margin: 0,
+          fontSize: 'clamp(28px, 8vw, 48px)'
+        }}>
           {userRole === 'admin' ? 'EDITORIAL HEADQUARTERS' : 'REPORTER DASHBOARD'}
         </h1>
-        <div style={{ fontFamily: 'var(--font-sans)', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '2px', marginTop: '10px' }}>
+        <div style={{ 
+          fontFamily: 'var(--font-sans)', 
+          fontSize: 'clamp(10px, 3vw, 11px)', 
+          fontWeight: 700, 
+          textTransform: 'uppercase', 
+          letterSpacing: '2px', 
+          marginTop: '10px',
+          wordBreak: 'break-word'
+        }}>
           {userProfile?.displayName || user?.email} • {userRole?.toUpperCase()} ACCESS
         </div>
       </header>
       
-      <div className="grid-system" style={{ marginBottom: '60px' }}>
-        <div style={{ gridColumn: 'span 4' }}>
-          <div style={{ border: '1px solid var(--text-ink)', padding: '30px', textAlign: 'center', backgroundColor: 'white', boxShadow: '10px 10px 0px var(--silver-accent)' }}>
-            <div className="editor-label">Articles Published</div>
-            <div style={{ fontSize: '3rem', fontWeight: 900, fontFamily: 'var(--font-header)' }}>{stats.totalPosts}</div>
-          </div>
+      {/* Stats Grid - Responsive */}
+      <div className="grid-system" style={{ 
+        marginBottom: 'clamp(40px, 8vh, 60px)',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+        gap: 'clamp(16px, 4vw, 30px)'
+      }}>
+        <div style={{ 
+          border: '1px solid var(--text-ink)', 
+          padding: 'clamp(20px, 5vw, 30px)', 
+          textAlign: 'center', 
+          backgroundColor: 'white', 
+          boxShadow: '10px 10px 0px var(--silver-accent)',
+          boxSizing: 'border-box'
+        }}>
+          <div className="editor-label" style={{ fontSize: 'clamp(10px, 3vw, 12px)' }}>Articles Published</div>
+          <div style={{ 
+            fontSize: 'clamp(2rem, 8vw, 3rem)', 
+            fontWeight: 900, 
+            fontFamily: 'var(--font-header)',
+            wordBreak: 'break-word'
+          }}>{stats.totalPosts}</div>
         </div>
-        <div style={{ gridColumn: 'span 4' }}>
-          <div style={{ border: '1px solid var(--text-ink)', padding: '30px', textAlign: 'center', backgroundColor: 'white', boxShadow: '10px 10px 0px var(--silver-accent)' }}>
-            <div className="editor-label">Total Readership</div>
-            <div style={{ fontSize: '3rem', fontWeight: 900, fontFamily: 'var(--font-header)' }}>{stats.totalViews}</div>
-          </div>
+        <div style={{ 
+          border: '1px solid var(--text-ink)', 
+          padding: 'clamp(20px, 5vw, 30px)', 
+          textAlign: 'center', 
+          backgroundColor: 'white', 
+          boxShadow: '10px 10px 0px var(--silver-accent)',
+          boxSizing: 'border-box'
+        }}>
+          <div className="editor-label" style={{ fontSize: 'clamp(10px, 3vw, 12px)' }}>Total Readership</div>
+          <div style={{ 
+            fontSize: 'clamp(2rem, 8vw, 3rem)', 
+            fontWeight: 900, 
+            fontFamily: 'var(--font-header)',
+            wordBreak: 'break-word'
+          }}>{stats.totalViews}</div>
         </div>
-        <div style={{ gridColumn: 'span 4' }}>
-          <div style={{ border: '1px solid var(--text-ink)', padding: '30px', textAlign: 'center', backgroundColor: 'white', boxShadow: '10px 10px 0px var(--silver-accent)' }}>
-            <div className="editor-label">Upcoming Releases</div>
-            <div style={{ fontSize: '3rem', fontWeight: 900, fontFamily: 'var(--font-header)' }}>{scheduledPosts.length}</div>
-          </div>
+        <div style={{ 
+          border: '1px solid var(--text-ink)', 
+          padding: 'clamp(20px, 5vw, 30px)', 
+          textAlign: 'center', 
+          backgroundColor: 'white', 
+          boxShadow: '10px 10px 0px var(--silver-accent)',
+          boxSizing: 'border-box'
+        }}>
+          <div className="editor-label" style={{ fontSize: 'clamp(10px, 3vw, 12px)' }}>Upcoming Releases</div>
+          <div style={{ 
+            fontSize: 'clamp(2rem, 8vw, 3rem)', 
+            fontWeight: 900, 
+            fontFamily: 'var(--font-header)',
+            wordBreak: 'break-word'
+          }}>{scheduledPosts.length}</div>
         </div>
       </div>
 
-      <section style={{ marginBottom: '80px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '30px', borderBottom: '1px solid black', paddingBottom: '10px' }}>
-          <h2 className="h-large" style={{ margin: 0 }}>ARCHIVE MANAGEMENT</h2>
+      <section style={{ marginBottom: 'clamp(50px, 10vh, 80px)' }}>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', // Stack on mobile
+          gap: 'clamp(15px, 4vw, 20px)', // Responsive gap
+          justifyContent: 'space-between', 
+          alignItems: 'flex-start', // Align left on mobile
+          marginBottom: '30px', 
+          borderBottom: '1px solid black', 
+          paddingBottom: '10px'
+        }}>
+          <h2 className="h-large" style={{ 
+            margin: 0,
+            fontSize: 'clamp(20px, 6vw, 32px)'
+          }}>ARCHIVE MANAGEMENT</h2>
           {(userRole === 'admin' || userRole === 'editor') && (
-            <Link to="/create-post" className="btn-heritage" style={{ textDecoration: 'none' }}>+ Draft New Article</Link>
+            <Link to="/create-post" className="btn-heritage" style={{ 
+              textDecoration: 'none',
+              display: 'inline-block',
+              textAlign: 'center',
+              padding: 'clamp(8px, 2vw, 10px) clamp(16px, 4vw, 20px)',
+              fontSize: 'clamp(11px, 3vw, 12px)'
+            }}>+ Draft New Article</Link>
           )}
         </div>
 
+        {/* Scheduled Posts - Mobile Friendly */}
         {scheduledPosts.length > 0 && (
-          <div style={{ marginBottom: '50px' }}>
-            <h3 className="editor-label" style={{ color: 'var(--green-accent)', marginBottom: '20px' }}>Scheduled for Release</h3>
-            <table className="nyt-table">
-              <tbody>
-                {scheduledPosts.map(post => (
-                  <tr key={post.id} style={{ backgroundColor: '#fdfdfd' }}>
-                    <td style={{ color: '#666', fontSize: '11px' }}>
-                      {new Date(post.publishedAt.toDate ? post.publishedAt.toDate() : post.publishedAt).toLocaleString()}
-                    </td>
-                    <td style={{ fontWeight: 700 }}>{post.title}</td>
-                    <td style={{ fontStyle: 'italic', fontSize: '11px' }}>Scheduled</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '15px' }}>
-                        <Link to={`/edit-post/${post.id}`} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-ink)' }}>EDIT</Link>
-                        <button onClick={() => confirmDelete(post.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d32f2f', fontSize: '11px', fontWeight: 700 }}>REMOVE</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div style={{ marginBottom: '50px', overflowX: 'auto' }}>
+            <h3 className="editor-label" style={{ 
+              color: 'var(--green-accent)', 
+              marginBottom: '20px',
+              fontSize: 'clamp(12px, 3.5vw, 14px)'
+            }}>Scheduled for Release</h3>
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '16px'
+            }}>
+              {scheduledPosts.map(post => (
+                <div key={post.id} style={{ 
+                  border: '1px solid #e0e0e0',
+                  padding: '16px',
+                  borderRadius: '4px',
+                  backgroundColor: '#fdfdfd'
+                }}>
+                  <div style={{ 
+                    fontSize: 'clamp(11px, 3vw, 12px)', 
+                    color: '#666',
+                    marginBottom: '8px'
+                  }}>
+                    {new Date(post.publishedAt.toDate ? post.publishedAt.toDate() : post.publishedAt).toLocaleString()}
+                  </div>
+                  <div style={{ 
+                    fontWeight: 700, 
+                    fontSize: 'clamp(14px, 4vw, 16px)',
+                    marginBottom: '8px',
+                    wordBreak: 'break-word'
+                  }}>
+                    {post.title}
+                  </div>
+                  <div style={{ 
+                    fontStyle: 'italic', 
+                    fontSize: 'clamp(10px, 2.5vw, 11px)',
+                    marginBottom: '12px',
+                    color: '#666'
+                  }}>
+                    Scheduled
+                  </div>
+                  <div style={{ display: 'flex', gap: '20px' }}>
+                    <Link to={`/edit-post/${post.id}`} style={{ 
+                      fontSize: 'clamp(11px, 3vw, 12px)', 
+                      fontWeight: 700, 
+                      color: 'var(--text-ink)',
+                      textDecoration: 'none'
+                    }}>EDIT</Link>
+                    <button onClick={() => confirmDelete(post.id)} style={{ 
+                      background: 'none', 
+                      border: 'none', 
+                      cursor: 'pointer', 
+                      color: '#d32f2f', 
+                      fontSize: 'clamp(11px, 3vw, 12px)', 
+                      fontWeight: 700,
+                      padding: 0
+                    }}>REMOVE</button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
         
         {posts.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '100px', border: '1px solid var(--silver-accent)', backgroundColor: '#f9f9f9' }}>
-            <p style={{ fontFamily: 'var(--font-main)', fontStyle: 'italic', color: '#666', marginBottom: '30px' }}>
+          <div style={{ 
+            textAlign: 'center', 
+            padding: 'clamp(60px, 15vh, 100px) clamp(20px, 5vw, 40px)', 
+            border: '1px solid var(--silver-accent)', 
+            backgroundColor: '#f9f9f9' 
+          }}>
+            <p style={{ 
+              fontFamily: 'var(--font-main)', 
+              fontStyle: 'italic', 
+              color: '#666', 
+              marginBottom: '30px',
+              fontSize: 'clamp(14px, 4vw, 16px)'
+            }}>
               No articles are currently on file in the press archives.
             </p>
             {(userRole === 'admin' || userRole === 'editor') && (
-              <Link to="/create-post" className="btn-heritage" style={{ textDecoration: 'none' }}>Draft Your First Story</Link>
+              <Link to="/create-post" className="btn-heritage" style={{ 
+                textDecoration: 'none',
+                display: 'inline-block'
+              }}>Draft Your First Story</Link>
             )}
           </div>
         ) : (
           <>
-            <table className="nyt-table">
-              <thead>
-                <tr>
-                  <th>DATE</th>
-                  <th>HEADLINE</th>
-                  {userRole === 'admin' && <th>REPORTER</th>}
-                  <th>VIEWS</th>
-                  <th>ACTIONS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {publishedPosts.map(post => (
-                  <tr key={post.id}>
-                    <td style={{ fontSize: '12px' }}>
-                      {post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : 'N/A'}
-                    </td>
-                    <td style={{ fontWeight: 700, maxWidth: '400px' }}>{post.title}</td>
-                    {userRole === 'admin' && <td style={{ fontSize: '12px', textTransform: 'uppercase' }}>{post.authorName}</td>}
-                    <td>{post.views || 0}</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '15px' }}>
-                        <Link to={`/post/${post.id}`} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-ink)' }}>VIEW</Link>
-                        <Link to={`/edit-post/${post.id}`} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-ink)' }}>EDIT</Link>
-                        <button 
-                          onClick={() => confirmDelete(post.id)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d32f2f', fontSize: '11px', fontWeight: 700 }}
-                        >
-                          REMOVE
-                        </button>
-                      </div>
-                    </td>
+            {/* Mobile Card View */}
+            <div className="mobile-post-cards" style={{ display: 'block' }}>
+              {publishedPosts.map(post => (
+                <div key={post.id} style={{ 
+                  border: '1px solid #e0e0e0',
+                  padding: '16px',
+                  marginBottom: '16px',
+                  borderRadius: '4px',
+                  backgroundColor: 'white'
+                }}>
+                  <div style={{ 
+                    fontSize: 'clamp(10px, 2.5vw, 12px)', 
+                    color: '#666',
+                    marginBottom: '8px'
+                  }}>
+                    {post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : 'N/A'}
+                  </div>
+                  <div style={{ 
+                    fontWeight: 700, 
+                    fontSize: 'clamp(14px, 4vw, 16px)',
+                    marginBottom: '8px',
+                    wordBreak: 'break-word'
+                  }}>
+                    {post.title}
+                  </div>
+                  {userRole === 'admin' && (
+                    <div style={{ 
+                      fontSize: 'clamp(10px, 2.5vw, 12px)', 
+                      textTransform: 'uppercase',
+                      marginBottom: '8px',
+                      color: '#666'
+                    }}>
+                      {post.authorName}
+                    </div>
+                  )}
+                  <div style={{ 
+                    fontSize: 'clamp(11px, 3vw, 13px)',
+                    marginBottom: '12px',
+                    color: '#333'
+                  }}>
+                    Views: {post.views || 0}
+                  </div>
+                  <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                    <Link to={`/post/${post.id}`} style={{ 
+                      fontSize: 'clamp(11px, 3vw, 12px)', 
+                      fontWeight: 700, 
+                      color: 'var(--text-ink)',
+                      textDecoration: 'none'
+                    }}>VIEW</Link>
+                    <Link to={`/edit-post/${post.id}`} style={{ 
+                      fontSize: 'clamp(11px, 3vw, 12px)', 
+                      fontWeight: 700, 
+                      color: 'var(--text-ink)',
+                      textDecoration: 'none'
+                    }}>EDIT</Link>
+                    <button 
+                      onClick={() => confirmDelete(post.id)}
+                      style={{ 
+                        background: 'none', 
+                        border: 'none', 
+                        cursor: 'pointer', 
+                        color: '#d32f2f', 
+                        fontSize: 'clamp(11px, 3vw, 12px)', 
+                        fontWeight: 700,
+                        padding: 0
+                      }}
+                    >
+                      REMOVE
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Desktop Table View - Hidden on mobile */}
+            <div className="desktop-table-view" style={{ 
+              display: 'none',
+              overflowX: 'auto'
+            }}>
+              <table className="nyt-table" style={{ minWidth: '600px', width: '100%' }}>
+                <thead>
+                  <tr>
+                    <th>DATE</th>
+                    <th>HEADLINE</th>
+                    {userRole === 'admin' && <th>REPORTER</th>}
+                    <th>VIEWS</th>
+                    <th>ACTIONS</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {publishedPosts.map(post => (
+                    <tr key={post.id}>
+                      <td style={{ fontSize: '12px' }}>
+                        {post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : 'N/A'}
+                      </td>
+                      <td style={{ fontWeight: 700 }}>{post.title}</td>
+                      {userRole === 'admin' && <td style={{ fontSize: '12px', textTransform: 'uppercase' }}>{post.authorName}</td>}
+                      <td>{post.views || 0}</td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '15px' }}>
+                          <Link to={`/post/${post.id}`} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-ink)' }}>VIEW</Link>
+                          <Link to={`/edit-post/${post.id}`} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-ink)' }}>EDIT</Link>
+                          <button 
+                            onClick={() => confirmDelete(post.id)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d32f2f', fontSize: '11px', fontWeight: 700 }}
+                          >
+                            REMOVE
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             
             {totalPages > 1 && (
               <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'center' }}>
@@ -270,22 +484,35 @@ const Dashboard = () => {
       </section>
 
       {userRole === 'admin' && (
-        <div style={{ marginTop: '100px' }}>
+        <div style={{ marginTop: 'clamp(60px, 10vh, 100px)' }}>
           <UserManager />
-          <div style={{ marginTop: '100px' }}>
+          <div style={{ marginTop: 'clamp(60px, 10vh, 100px)' }}>
             <DonationManager />
           </div>
         </div>
       )}
 
       {userRole === 'reader' && (
-        <div style={{ textAlign: 'center', padding: '100px', border: 'var(--border-double)', backgroundColor: 'white' }}>
-          <h2 className="h-large">WELCOME, SUBSCRIBER.</h2>
-          <p style={{ fontFamily: 'var(--font-main)', marginTop: '20px', color: '#333' }}>
+        <div style={{ 
+          textAlign: 'center', 
+          padding: 'clamp(60px, 15vh, 100px) clamp(20px, 5vw, 40px)', 
+          border: 'var(--border-double)', 
+          backgroundColor: 'white' 
+        }}>
+          <h2 className="h-large" style={{ fontSize: 'clamp(24px, 6vw, 36px)' }}>WELCOME, SUBSCRIBER.</h2>
+          <p style={{ 
+            fontFamily: 'var(--font-main)', 
+            marginTop: '20px', 
+            color: '#333',
+            fontSize: 'clamp(14px, 4vw, 16px)'
+          }}>
             Thank you for supporting independent journalism at The Andinet Gazette.
           </p>
           <div style={{ marginTop: '40px' }}>
-            <Link to="/profile" className="btn-heritage" style={{ textDecoration: 'none' }}>Manage Your Account</Link>
+            <Link to="/profile" className="btn-heritage" style={{ 
+              textDecoration: 'none',
+              display: 'inline-block'
+            }}>Manage Your Account</Link>
           </div>
         </div>
       )}
@@ -306,6 +533,40 @@ const Dashboard = () => {
           onDismiss={() => setToast(null)} 
         />
       )}
+
+      {/* Responsive CSS */}
+      <style>{`
+        @media (min-width: 769px) {
+          .mobile-post-cards {
+            display: none !important;
+          }
+          .desktop-table-view {
+            display: block !important;
+          }
+        }
+        
+        @media (max-width: 768px) {
+          .mobile-post-cards {
+            display: block !important;
+          }
+          .desktop-table-view {
+            display: none !important;
+          }
+        }
+        
+        /* Better touch targets for mobile */
+        @media (max-width: 768px) {
+          .btn-heritage,
+          button,
+          a {
+            min-height: 44px;
+            min-width: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+          }
+        }
+      `}</style>
     </div>
   );
 };

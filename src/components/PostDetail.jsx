@@ -1,4 +1,4 @@
-// PostDetail.jsx
+// PostDetail.jsx - Mobile responsive version
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { db } from "../firebase/config";
@@ -6,14 +6,14 @@ import { doc, getDoc, updateDoc, increment } from "firebase/firestore";
 import CommentSection from "./CommentSection";
 import Skeleton from "./common/Skeleton";
 import SEO from "./common/SEO";
-import { useAuth } from "../context/AuthContext"; // Add this import
+import { useAuth } from "../context/AuthContext";
 
 const PostDetail = () => {
   const { id } = useParams();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user, userRole } = useAuth(); // Add this to track auth state
+  const { user, userRole } = useAuth();
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -68,19 +68,22 @@ const PostDetail = () => {
     };
 
     fetchPost();
-  }, [id, user, userRole]); // Added dependencies
+  }, [id, user, userRole]);
 
   if (loading) {
     console.log("⏳ Rendering loading state...");
     return (
-      <div className="container" style={{ marginTop: "50px" }}>
-        <div style={{ textAlign: "center", marginBottom: "50px" }}>
-          <Skeleton width="20%" height="20px" margin="0 auto" />
-          <Skeleton width="80%" height="100px" margin="20px auto" />
-          <Skeleton width="40%" height="40px" margin="30px auto" />
+      <div className="container" style={{ 
+        marginTop: "clamp(30px, 8vh, 50px)",
+        padding: "0 clamp(16px, 4vw, 20px)"
+      }}>
+        <div style={{ textAlign: "center", marginBottom: "clamp(30px, 8vh, 50px)" }}>
+          <Skeleton width="clamp(100px, 30vw, 200px)" height="20px" margin="0 auto" />
+          <Skeleton width="clamp(200px, 80vw, 600px)" height="clamp(60px, 10vh, 100px)" margin="20px auto" />
+          <Skeleton width="clamp(120px, 40vw, 280px)" height="clamp(30px, 5vh, 40px)" margin="30px auto" />
         </div>
-        <Skeleton height="500px" />
-        <div className="readable-container" style={{ marginTop: "50px" }}>
+        <Skeleton height="clamp(300px, 50vh, 500px)" />
+        <div className="readable-container" style={{ marginTop: "clamp(30px, 8vh, 50px)" }}>
           <Skeleton count={10} />
         </div>
       </div>
@@ -92,24 +95,33 @@ const PostDetail = () => {
     return (
       <div
         className="container"
-        style={{ maxWidth: "700px", marginTop: "100px", marginBottom: "100px" }}
+        style={{ 
+          maxWidth: "min(700px, 90%)", 
+          marginTop: "clamp(50px, 15vh, 100px)", 
+          marginBottom: "clamp(50px, 15vh, 100px)",
+          padding: "0 clamp(16px, 4vw, 20px)"
+        }}
       >
         <div
           style={{
-            padding: "60px",
+            padding: "clamp(40px, 10vw, 60px) clamp(20px, 5vw, 40px)",
             textAlign: "center",
             border: "1px solid var(--silver-accent)",
             backgroundColor: "white",
           }}
         >
-          <h1 className="h-large" style={{ margin: "0 0 20px 0" }}>
+          <h1 className="h-large" style={{ 
+            margin: "0 0 clamp(15px, 4vh, 20px) 0",
+            fontSize: "clamp(48px, 12vw, 72px)"
+          }}>
             404
           </h1>
           <p
             style={{
               fontFamily: "var(--font-serif)",
-              fontSize: "1.2rem",
-              marginBottom: "30px",
+              fontSize: "clamp(1rem, 4vw, 1.2rem)",
+              marginBottom: "clamp(20px, 5vh, 30px)",
+              lineHeight: "1.5"
             }}
           >
             {error || "Article not found in the archives"}
@@ -117,7 +129,12 @@ const PostDetail = () => {
           <Link
             to="/"
             className="btn-heritage"
-            style={{ textDecoration: "none" }}
+            style={{ 
+              textDecoration: "none",
+              display: "inline-block",
+              padding: "clamp(8px, 2vw, 10px) clamp(16px, 4vw, 20px)",
+              fontSize: "clamp(11px, 3vw, 12px)"
+            }}
           >
             RETURN TO FRONT PAGE
           </Link>
@@ -137,36 +154,55 @@ const PostDetail = () => {
         type="article"
       />
 
-      <div className="container">
+      <div className="container" style={{
+        padding: "0 clamp(16px, 4vw, 20px)"
+      }}>
         <div
           style={{
             textAlign: "center",
-            padding: "20px 0",
+            padding: "clamp(15px, 4vh, 20px) 0",
             borderBottom: "var(--hairline)",
-            marginBottom: "40px",
+            marginBottom: "clamp(30px, 6vh, 40px)",
           }}
         >
           <Link
             to="/"
             className="nav-link"
-            style={{ fontSize: "14px", fontFamily: "var(--font-logo)" }}
+            style={{ 
+              fontSize: "clamp(12px, 4vw, 14px)", 
+              fontFamily: "var(--font-logo)",
+              textDecoration: "none"
+            }}
           >
             The Andinet Gazette
           </Link>
         </div>
 
-        <article className="grid-system" style={{ marginBottom: "100px" }}>
+        <article className="grid-system" style={{ marginBottom: "clamp(60px, 15vh, 100px)" }}>
           <header
             style={{
               gridColumn: "span 12",
               textAlign: "center",
-              marginBottom: "50px",
+              marginBottom: "clamp(30px, 8vh, 50px)",
             }}
           >
-            <span className="kicker" style={{ color: "#d32f2f" }}>
+            <span className="kicker" style={{ 
+              color: "#d32f2f",
+              fontSize: "clamp(11px, 3vw, 12px)",
+              display: "inline-block",
+              marginBottom: "clamp(10px, 3vh, 15px)"
+            }}>
               {post.category}
             </span>
-            <h1 className="h-giant" style={{ cursor: "default" }}>
+            <h1 className="h-giant" style={{ 
+              cursor: "default",
+              fontSize: "clamp(28px, 8vw, 48px)",
+              lineHeight: "1.2",
+              margin: "0 auto",
+              maxWidth: "min(1000px, 100%)",
+              padding: "0 clamp(10px, 3vw, 20px)",
+              wordBreak: "break-word"
+            }}>
               {post.title}
             </h1>
             <div
@@ -174,10 +210,12 @@ const PostDetail = () => {
               style={{
                 borderTop: "1px solid black",
                 borderBottom: "4px double black",
-                padding: "15px 0",
-                marginTop: "30px",
-                maxWidth: "800px",
-                margin: "30px auto 0 auto",
+                padding: "clamp(12px, 3vh, 15px) clamp(16px, 4vw, 20px)",
+                marginTop: "clamp(20px, 5vh, 30px)",
+                maxWidth: "min(800px, 100%)",
+                margin: "clamp(20px, 5vh, 30px) auto 0 auto",
+                fontSize: "clamp(10px, 3vw, 12px)",
+                lineHeight: "1.4"
               }}
             >
               By {post.authorName} • Published{" "}
@@ -198,44 +236,58 @@ const PostDetail = () => {
               <div
                 className="media-frame"
                 style={{
-                  marginBottom: "50px",
+                  marginBottom: "clamp(30px, 8vh, 50px)",
                   padding: "0",
                   border: "none",
                   display: "flex",
-                  justifyContent: "center",
+                  flexDirection: "column",
+                  alignItems: "center",
                 }}
               >
                 <img
                   src={post.imageUrl}
                   alt={post.title}
                   loading="lazy"
-                  width="50%"
-                  height="auto"
-                  style={{ width: "100%", height: "auto" }}
-                />
-                <div
-                  className="caption-nyt"
-                  style={{
-                    marginTop: "10px",
-                    fontSize: "11px",
-                    textAlign: "center",
+                  style={{ 
+                    width: "100%", 
+                    height: "auto",
+                    maxWidth: "min(100%, 800px)",
+                    objectFit: "cover"
                   }}
-                >
-                </div>
+                />
+                {post.caption && (
+                  <div
+                    className="caption-nyt"
+                    style={{
+                      marginTop: "clamp(8px, 2vh, 10px)",
+                      fontSize: "clamp(10px, 2.5vw, 11px)",
+                      textAlign: "center",
+                      color: "#666",
+                      maxWidth: "min(800px, 100%)"
+                    }}
+                  >
+                    {post.caption}
+                  </div>
+                )}
               </div>
             )}
           </div>
 
-          <div className="readable-container" style={{ gridColumn: "span 12" }}>
+          <div className="readable-container" style={{ 
+            gridColumn: "span 12",
+            maxWidth: "min(800px, 100%)",
+            margin: "0 auto"
+          }}>
             <div
               className="body-text"
               style={{
-                fontSize: "1.25rem",
+                fontSize: "clamp(1rem, 4vw, 1.25rem)",
                 color: "#111",
-                lineHeight: "1.6",
+                lineHeight: "clamp(1.5, 5vw, 1.6)",
                 whiteSpace: "pre-wrap",
                 overflowWrap: "break-word",
                 wordBreak: "break-word",
+                padding: "0 clamp(10px, 3vw, 20px)"
               }}
             >
               {post.content}
@@ -243,9 +295,11 @@ const PostDetail = () => {
 
             <section
               style={{
-                marginTop: "100px",
+                marginTop: "clamp(60px, 15vh, 100px)",
                 borderTop: "1px solid black",
-                paddingTop: "60px",
+                paddingTop: "clamp(40px, 10vh, 60px)",
+                paddingLeft: "clamp(10px, 3vw, 20px)",
+                paddingRight: "clamp(10px, 3vw, 20px)"
               }}
             >
               <div
@@ -254,23 +308,29 @@ const PostDetail = () => {
                   backgroundColor: "var(--green-accent)",
                   color: "white",
                   border: "none",
+                  padding: "clamp(20px, 5vw, 30px)",
+                  marginBottom: "clamp(30px, 8vh, 40px)",
+                  borderRadius: "2px"
                 }}
               >
                 <h4
                   style={{
                     fontFamily: "var(--font-sans)",
                     textTransform: "uppercase",
-                    fontSize: "12px",
+                    fontSize: "clamp(11px, 3vw, 12px)",
                     fontWeight: 700,
+                    margin: "0 0 clamp(8px, 2vh, 10px) 0"
                   }}
                 >
                   Editorial Note
                 </h4>
                 <p
                   style={{
-                    fontSize: "13px",
+                    fontSize: "clamp(12px, 3.5vw, 13px)",
                     fontStyle: "italic",
                     marginTop: "10px",
+                    lineHeight: "1.5",
+                    margin: 0
                   }}
                 >
                   The Andinet Gazette is committed to journalistic integrity.
@@ -283,6 +343,37 @@ const PostDetail = () => {
           </div>
         </article>
       </div>
+
+      {/* Add responsive CSS for mobile optimizations */}
+      <style>{`
+        @media (max-width: 768px) {
+          .body-text {
+            font-size: 16px !important;
+            line-height: 1.5 !important;
+          }
+          
+          .byline {
+            font-size: 10px !important;
+          }
+          
+          /* Better touch targets for links */
+          a, button {
+            min-height: 44px;
+            min-width: 44px;
+          }
+        }
+        
+        /* Improve readability on very small screens */
+        @media (max-width: 480px) {
+          .body-text {
+            font-size: 15px !important;
+          }
+          
+          h1 {
+            font-size: 28px !important;
+          }
+        }
+      `}</style>
     </>
   );
 };
