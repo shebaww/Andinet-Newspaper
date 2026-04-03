@@ -131,6 +131,27 @@ const MobileMenu = ({ isOpen, onClose, user, userRole, onLogout }) => {
           >
             About
           </Link>
+              <Link 
+                to="/puzzle" 
+                onClick={onClose} 
+                style={{ 
+                  textDecoration: 'none', 
+                  color: '#1a1a1a',
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: 'clamp(16px, 4.5vw, 18px)',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  padding: '12px 0',
+                  borderBottom: '1px solid #e0e0e0',
+                  transition: 'opacity 0.2s',
+                  display: 'block'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+              >
+                Puzzle
+            </Link>
           
           <Link 
             to="/donate" 

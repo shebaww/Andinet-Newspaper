@@ -1,8 +1,14 @@
 // src/App.jsx - Replace with this fixed version
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import { useEffect } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./components/Login";
+import PuzzlesPage from "./components/PuzzlePage";
 import ForgotPassword from "./components/ForgotPassword";
 import Signup from "./components/Signup";
 import Navbar from "./components/Navbar";
@@ -19,7 +25,7 @@ import Contact from "./components/Contact";
 import NotFound from "./components/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ErrorBoundary from "./components/common/ErrorBoundary";
-import { initGA, trackPageView } from './utils/analytics';
+import { initGA, trackPageView } from "./utils/analytics";
 
 function AppRoutes() {
   const { loading } = useAuth();
@@ -51,8 +57,9 @@ function AppRoutes() {
         />
         <Route path="/donate" element={<Donate />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/puzzle" element={<PuzzlesPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-    <Route path="/test" element={<div>TEST PAGE - {userRole}</div>} />
+        <Route path="/test" element={<div>TEST PAGE - {userRole}</div>} />
         <Route path="/signup" element={<Signup />} />
         <Route
           path="/profile"

@@ -109,6 +109,20 @@ const Navbar = () => {
               </Link>
             </li>
             <li>
+              <Link to="/puzzle" className="nav-link" style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: 'clamp(10px, 2.5vw, 11px)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                textDecoration: 'none',
+                color: '#1a1a1a',
+                whiteSpace: 'nowrap'
+              }}>
+                Puzzles
+              </Link>
+            </li>
+            <li>
               <Link to="/donate" className="nav-link" style={{
                 fontFamily: 'var(--font-sans)',
                 fontSize: 'clamp(10px, 2.5vw, 11px)',
